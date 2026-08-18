@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zne-scars"
+version = "0.1.0"
+description = "Local, simulation-only study of zero-noise extrapolation applied to quantum many-body scar dynamics in the mixed-field Ising model (docs/design.md)"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "mitiq==1.0.0",
+    "qiskit-aer==0.17.2",
+    "ply",  # cirq QASM parser dependency required by mitiq's qiskit<->cirq conversion
+]
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# NOTE: RuntimeWarning suppression is deliberately NOT global. The spurious macOS
+# Accelerate complex-matmul warnings are filtered per-file (pytestmark) only in the
+# test modules whose dense-matrix computations trip them, each with its own rationale.

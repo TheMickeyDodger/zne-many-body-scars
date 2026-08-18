@@ -1,0 +1,30 @@
+{
+  "excluded_steps": [
+    34
+  ],
+  "gif_is_lower_bound": false,
+  "gif_value": 1.2777339664421639,
+  "if_wins": 39,
+  "m_zero_flagged": false,
+  "majority_passes": true,
+  "primary_pipeline": "density_matrix (exact under the noise model; zero sampling variance)",
+  "reportable_steps_m": 39,
+  "rms_m": 0.25106736243976785,
+  "rms_u": 0.32079729685433694,
+  "shot_pipeline": {
+    "excluded_steps": [
+      34
+    ],
+    "gif_is_lower_bound": false,
+    "gif_value": 1.2774206732205877,
+    "if_wins": 39,
+    "m_zero_flagged": false,
+    "majority_passes": true,
+    "note": "full \u00a713 secondary pipeline, reported ALONGSIDE the density-matrix primary's pre-registered verdict above, not replacing it",
+    "reportable_steps_m": 39,
+    "rms_m": 0.25100051122517575,
+    "rms_u": 0.3206332420279757,
+    "verdict_passes": true
+  },
+  "verdict_passes": true
+}
