@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this software or research artifact, please cite it using the metadata below."
+title: "zne-many-body-scars"
+type: software
+authors:
+  - family-names: "TheMickeyDodger"
+version: 0.1.0
+date-released: 2026-08-18
+repository-code: "https://github.com/TheMickeyDodger/zne-many-body-scars"
+license: Apache-2.0
+abstract: "A reproducible, simulation-only study of zero-noise extrapolation applied to quantum many-body scar dynamics in the mixed-field Ising model."
+keywords:
+  - quantum computing
+  - zero-noise extrapolation
+  - quantum error mitigation
+  - many-body physics
+  - reproducible research

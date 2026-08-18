@@ -2,6 +2,8 @@
 
 A local, simulation-only study of zero-noise extrapolation (ZNE) applied to quantum many-body scar dynamics in the mixed-field Ising model (MFIM). Fully specified by [`docs/design.md`](docs/design.md) (the pre-registered design, 20 sections with a complete review history), with **one canonical execution** per that design plus two reproductions that verified byte-identity; findings in [`docs/results-minimal.md`](docs/results-minimal.md), raw recorded data in `results/minimal/`.
 
+![Canonical minimal experiment showing MFIM scar dynamics and absolute error under zero-noise extrapolation](figures/minimal_experiment.png)
+
 ## 1. The question
 
 Does ZNE, applied to a first-order Trotter simulation of quantum many-body scar dynamics in the one-dimensional MFIM, reduce the error of the staggered-magnetization observable $\langle Z_\pi\rangle/L$ relative to the noiseless value of the *same* circuit, under a fully specified local depolarizing noise model in a classical simulator? (design.md §1 — a measurement, pre-registered, with a negative result declared reportable in advance.)
