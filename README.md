@@ -72,7 +72,6 @@ tests/                    test suite incl. the pre-registered T1–T6 properties
 scripts/run_minimal.py    executes design §15 exactly; orchestration only
 scripts/make_figures.py   regenerates figures from recorded results only
 results/minimal/          the recorded experiment (deterministic, 6 files)
-results/minimal-repro/    second run, verified byte-identical (determinism evidence)
 figures/                  generated exclusively from results/minimal/
 requirements.txt          pinned environment (pip freeze --exclude-editable)
 pyproject.toml            packaging + pytest configuration
