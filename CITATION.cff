@@ -6,12 +6,8 @@ authors:
   # Pseudonymous author, given as a CFF entity name (not a family name).
   - name: "TheMickeyDodger"
 version: 0.1.0
-# date-released: intentionally unset until v0.1.0 is actually released.
-# At release time, set it to the release date and add the archival DOI minted
-# by Zenodo for that release, e.g.:
-#   date-released: YYYY-MM-DD
-#   doi: 10.5281/zenodo.XXXXXXX
-# Never a placeholder or invented DOI before the archive exists.
+date-released: 2026-08-18
+doi: 10.5281/zenodo.22005534
 repository-code: "https://github.com/TheMickeyDodger/zne-many-body-scars"
 license: Apache-2.0
 abstract: "A reproducible, simulation-only study of zero-noise extrapolation applied to quantum many-body scar dynamics in the mixed-field Ising model."
