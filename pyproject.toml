@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "zne-scars"
 version = "0.1.0"
 description = "Local, simulation-only study of zero-noise extrapolation applied to quantum many-body scar dynamics in the mixed-field Ising model (docs/design.md)"
+license = {text = "Apache-2.0"}
 requires-python = ">=3.11,<3.13"
 dependencies = [
     "mitiq==1.0.0",

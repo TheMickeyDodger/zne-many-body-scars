@@ -1,0 +1,21 @@
+{
+  "_comment": [
+    "Sealed v0.1.0 source identity (Phase A, M1 round 4).",
+    "tools/verify_reproduction.py anchors provenance validation to this FIXED",
+    "pair: a reproduction's recorded (source_tree_sha256, source_identifier_note)",
+    "must equal this sealed pair or the canonical bundle's recorded pair,",
+    "validated atomically. The expectation never derives from the current",
+    "working tree: an edited tree cannot validate its own runs, and a correct",
+    "sealed-identity reproduction keeps passing regardless of later tree edits.",
+    "This file lives in unhashed tools/ so it can state the hash",
+    "without changing it. Any legitimate change to hashed source (src/**/*.py,",
+    "scripts/*.py, pyproject.toml, requirements.txt) must deliberately update",
+    "this file; tests/test_verify_reproduction.py contains a guard test that",
+    "fails loudly when this seal and the working tree disagree, so staleness",
+    "surfaces as a test failure, never as a silent wrong PASS."
+  ],
+  "sealed": {
+    "source_tree_sha256": "ab751d691a4cc3fc623b6044ef70dead0b54df46c0f33f880e574f7a828d6ca2",
+    "source_identifier_note": "content hash over sorted src/**/*.py, scripts/*.py, pyproject.toml, requirements.txt — not a VCS revision; identifies the exact source that produced this run independent of version-control state"
+  }
+}

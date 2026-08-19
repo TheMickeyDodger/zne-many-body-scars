@@ -1,5 +1,17 @@
 # Review Package — for the human owner
 
+> **[2026-08-18, Phase A annotation — read first.]** This is the historical
+> decision artifact for the FIRST commit of this repository. It is retained
+> unedited (below this note) as part of the review history, and it records the
+> work-tree state as of that decision. The state has since moved: the commit it
+> requested was authorized and made (`0c6e986`), the `results/minimal-repro/`
+> directory it inventories no longer exists in the tree (leaving it uncommitted
+> and disposable was this document's own §5 recommendation), and Phase A
+> subsequently hardened the run scripts' IO paths
+> and added the release documentation — complete change history in
+> `docs/design.md` §20 (Phase A rows). Present-tense statements below are
+> present-tense relative to that first-commit decision, not to the current tree.
+
 **Purpose:** everything needed to decide whether to authorise a **first commit** of this repository. At the time this package was prepared, no commit had been made (granting the approval this document requests is exactly what changes that); the document requests that decision and nothing more (§7). Every claim here traces to an artifact already in the work tree as of this package.
 
 ## 1. Work-tree inventory

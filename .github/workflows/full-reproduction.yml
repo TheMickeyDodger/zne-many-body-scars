@@ -1,0 +1,87 @@
+# Full-reproduction workflow (Phase A / A3).
+#
+# Re-executes the ENTIRE minimal experiment on a Linux runner and verifies the
+# output against the canonical recorded bundle with the repository's single
+# tested comparison entry point, tools/verify_reproduction.py.
+#
+# What a green run of this job DEMONSTRATES: the pinned environment installs on
+# ubuntu-latest; the HASHED EXPERIMENT SOURCE (src/**/*.py, scripts/*.py,
+# pyproject.toml, requirements.txt — the seal's exact scope; tools/, tests/,
+# docs/ and .github/ are outside it, their integrity being a property of the
+# commit this run checked out) matches the sealed identity; and a fresh
+# execution reproduces the canonical results within the tool's off-platform
+# contract
+# (byte identity where it happens to hold; otherwise 1e-12 absolute numeric
+# agreement on every value, exact match on every non-numeric cell, and only the
+# documented environment fields differing).
+#
+# What it does NOT demonstrate: byte identity of the data files (documented only
+# for the pinned Python 3.12.14 macOS/arm64/Accelerate environment — README §4),
+# and nothing about hardware. Until this job's first recorded run, design.md
+# §16's cross-platform 1e-12 agreement remains a design EXPECTATION, not
+# evidence; see docs/ci-reproduction-assessment.md for the full honest-claims
+# analysis, including the known shot-pipeline caveat (§16) under which this job
+# may legitimately fail and that failure is a reportable finding.
+#
+# Trigger: workflow_dispatch ONLY (manual). The job re-runs the whole experiment
+# (250.3 s wall on the pinned 10-core machine with ~13x CPU parallelism; expect
+# substantially longer on a standard 2-4 core runner), so it is run deliberately
+# — before sealing a release, or to check an environment claim — rather than on
+# every push. The fast unit-test workflow (tests.yml) is unchanged and covers
+# pushes and pull requests.
+#
+# Safety: this job never writes into results/minimal/ or figures/ — the M1
+# guards refuse both frozen directories by default, no override flag appears
+# anywhere here, and the verifier opens the canonical bundle read-only.
+
+name: Full reproduction
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reproduce:
+    runs-on: ubuntu-latest
+    # user CPU of a local run is ~700-900 s; a 2-core runner therefore needs
+    # ~6-10 min of compute plus install — 45 min is a generous ceiling, not a
+    # runtime expectation.
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          # Exact pin, deliberately: it removes versions.python from the set of
+          # legitimately-differing fields, tightening what a green run means.
+          # What it does NOT buy on Linux: byte identity (platform/BLAS still
+          # differ from the canonical macOS/arm64/Accelerate record).
+          python-version: "3.12.14"
+          cache: pip
+
+      - name: Install the pinned environment
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install -e .
+
+      - name: Unit suite (includes the sealed-identity guard test)
+        run: python -m pytest -q
+
+      - name: Run the full minimal experiment into a fresh guarded directory
+        run: python scripts/run_minimal.py --out results/repro
+
+      - name: Verify against the canonical bundle
+        run: python tools/verify_reproduction.py --canonical results/minimal --repro results/repro
+
+      - name: Upload the reproduction bundle for inspection
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: reproduction-bundle
+          path: results/repro/

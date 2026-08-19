@@ -3,6 +3,12 @@
 
 Reads results/minimal/steps.csv; performs no simulation and no physics — plotting
 only. Run:  .venv/bin/python scripts/make_figures.py [--results DIR] [--out DIR]
+
+Writing into either frozen canonical directory (figures/ or results/minimal/) is
+refused — adding files included — unless --allow-canonical-overwrite is passed
+explicitly; the default --out is a fresh directory. --results stays read-only,
+so its canonical default is safe. The shared guard lives in
+scripts/_canonical_guard.py.
 """
 
 from __future__ import annotations
@@ -16,13 +22,25 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
+from _canonical_guard import CANONICAL_FIGURES, resolve_out_dir
 
-def main() -> None:
+
+def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument("--results", default="results/minimal")
-    parser.add_argument("--out", default="figures")
-    args = parser.parse_args()
-    out = Path(args.out)
+    parser.add_argument("--out", default="figures-repro")
+    parser.add_argument(
+        "--allow-canonical-overwrite", action="store_true",
+        help="explicitly permit writing into a frozen canonical directory "
+             "(figures/ or results/minimal/); never used by the documented "
+             "reproduction procedure",
+    )
+    return parser
+
+
+def main() -> None:
+    args = build_parser().parse_args()
+    out = resolve_out_dir(args.out, args.allow_canonical_overwrite)
     out.mkdir(parents=True, exist_ok=True)
 
     with (Path(args.results) / "steps.csv").open() as f:

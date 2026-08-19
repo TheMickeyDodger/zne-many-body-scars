@@ -1,6 +1,6 @@
 # Results: Minimal Experiment (design.md §15)
 
-**Status:** M3 deliverable. All numbers below come from `results/minimal/` (bit-reproducible: two independent runs produced sha256-identical output files). Figure: `figures/minimal_experiment.{png,pdf}`, regenerated from `results/minimal/steps.csv` only.
+**Status:** M3 deliverable. All numbers below come from `results/minimal/` (bit-reproducible: three independent executions — two by the implementer, one by the project lead from a clean state — produced sha256-identical output files; recorded in `docs/review-package.md` §2). Figure: `figures/minimal_experiment.{png,pdf}`, regenerated from `results/minimal/steps.csv` only.
 
 ## 1. What was run
 
@@ -90,9 +90,15 @@ The conclusion that survives regardless of fitting convention: **a two-parameter
 ## Reproduction
 
 ```
-# into a FRESH directory — never overwrite the canonical results/minimal/:
+# into a FRESH directory (the default; both scripts refuse both frozen canonical
+# directories, results/minimal/ and figures/, as output targets — by filesystem
+# identity, adding files included — without --allow-canonical-overwrite):
 .venv/bin/python scripts/run_minimal.py --out results/repro
-shasum -a 256 results/minimal/* results/repro/*      # every pair must match
+# executable comparison against the canonical bundle: exits non-zero on genuine
+# mismatch; detects and reports same-platform (byte identity of the five data
+# files; environment.json differs only in documented provenance/tooling fields)
+# vs off-platform (1e-12 numeric agreement) — expectations itemized in README §4:
+.venv/bin/python tools/verify_reproduction.py --canonical results/minimal --repro results/repro
 .venv/bin/python scripts/make_figures.py --results results/repro --out figures-repro
 ```
-The run completes in a few minutes on a laptop (timing is stdout-only and deliberately not part of the recorded outputs). `results/minimal-repro/` holds the second run, verified byte-identical.
+The run completes in a few minutes on a laptop (timing is stdout-only and deliberately not part of the recorded outputs). A second, independent run was executed into a separate directory at the time of the original work and verified byte-identical (sha256) against `results/minimal/`; the identity is recorded in `docs/review-package.md` (§1 inventory row and §2 determinism row), and the byte-identical copy itself was deliberately not committed — an identical duplicate adds no information.

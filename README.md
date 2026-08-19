@@ -37,22 +37,47 @@ python3.12 -m venv .venv
 
 .venv/bin/python -m pytest -q
 
-# Reproduce the experiment into a FRESH directory — never overwrite the canonical
-# results/minimal/, the evidence base the experiment's documented numbers check against:
+# Reproduce the experiment into a FRESH directory (results/repro is the default;
+# both scripts refuse BOTH frozen canonical directories — results/minimal/, the
+# evidence base the experiment's documented numbers check against, and figures/ —
+# as output targets, where writing includes merely adding files, unless the
+# explicit --allow-canonical-overwrite flag is passed, which reproduction never
+# needs. The refusal works by filesystem identity, so case-variant spellings and
+# symlinks of a canonical directory are refused too):
 .venv/bin/python scripts/run_minimal.py --out results/repro
 
-# The determinism claim's evidence IS this comparison — run it, do not skip it:
-shasum -a 256 results/minimal/* results/repro/*
-# every file must hash identically to its counterpart; equivalently:
-diff -r results/minimal results/repro && echo "byte-identical"
+# The determinism claim's evidence IS this comparison — run it, do not skip it.
+# It exits non-zero on any genuine mismatch and states which case it detected:
+#  * same-platform (the pinned environment: recorded Python version and
+#    platform/BLAS match — the same platform CLASS; the records deliberately
+#    hold no machine identity): on the SAME physical machine the five data
+#    files must be byte-identical (design.md §16 scopes byte identity to same
+#    hardware). On a DIFFERENT machine of this class, declare it with
+#    --different-hardware and the contract becomes 1e-12 numerical instead;
+#    environment.json rules are identical either way, and
+#    environment.json may differ ONLY in the two provenance fields
+#    (source_tree_sha256, source_identifier_note — hashed source changed after
+#    the canonical run was recorded: overwrite guards, the note wording, and
+#    pyproject license metadata, per design.md §20 Phase A; validated as an
+#    atomic pair against the sealed identity in tools/release_identity.json)
+#    plus the packaging tool's version (versions.packages.pip — deliberately
+#    unpinned; pip enters no computation);
+#  * off-platform (a different platform/BLAS, or another Python 3.12.x patch):
+#    byte identity is not claimed; every number must agree to 1e-12 (design.md
+#    §16). Only the Python patch (within 3.12.x), the platform/BLAS field
+#    VALUES, and pip may legitimately differ — pinned scientific packages may
+#    not, and the platform metadata structure must stay intact.
+.venv/bin/python tools/verify_reproduction.py --canonical results/minimal --repro results/repro
 
-# Regenerate figures (reads recorded CSV only), likewise into a fresh directory:
+# Regenerate figures (reads recorded CSV only), likewise into a fresh directory
+# (figures-repro is the default; canonical figures/ is likewise refused without
+# the explicit override flag):
 .venv/bin/python scripts/make_figures.py --results results/repro --out figures-repro
 ```
 
 Cost, qualitatively: the test suite runs in seconds; the experiment in a few minutes on a laptop. No experiment-runtime timing is recorded in `results/` — a deliberate design choice (timing goes to stdout only and is excluded from the deterministic outputs, precisely so that byte-reproducibility does not depend on wall clock). Incidental pytest durations appearing in `docs/mutation-evidence.md` are test-harness output, not experiment data.
 
-**Determinism claim** (design.md §16; proven, not asserted): on the same pinned environment, the experiment's six recorded output files are byte-identical across runs — verified across three independent executions (two by the implementer, one by the project lead from a clean state), all sha256-identical. **Exact byte-comparison requires Python 3.12.14** (the version recorded in `environment.json`); any other 3.12.x gives numerical reproduction only. Cross-platform, design.md §16 claims only 1e-12 agreement (BLAS reductions differ). Nothing time- or path-dependent enters the recorded outputs. The figure regeneration claim is that figures derive from recorded CSV only; no byte-identity claim is made for image files.
+**Determinism claim** (design.md §16; proven, not asserted): on the same pinned environment, the experiment's six recorded output files are byte-identical across runs — verified across three independent executions (two by the implementer, one by the project lead from a clean state), all sha256-identical. Those executions ran the exact source recorded in the canonical `environment.json` (`source_tree_sha256` `7161d655…`); after the post-recording changes to hashed source (canonical-overwrite guards, the provenance-note wording, and pyproject license metadata — complete history in design.md §20 Phase A), a fresh run's comparison against `results/minimal/` matches byte-for-byte on the five data files while `environment.json` legitimately differs only in the provenance and packaging-tool fields itemized in §4 above — `tools/verify_reproduction.py` checks precisely this, and detects and reports which comparison mode applies. **Exact byte-comparison requires Python 3.12.14 AND the same physical hardware/BLAS build** (design.md §16; the version is recorded in `environment.json`, but machine identity deliberately is not — a reproducer on a different machine of the same platform class passes `--different-hardware` to the verifier for the numerical contract); any other 3.12.x likewise gives numerical reproduction only. Cross-platform, design.md §16 claims only 1e-12 agreement (BLAS reductions differ). Nothing time- or path-dependent enters the recorded outputs. The figure regeneration claim is that figures derive from recorded CSV only; no byte-identity claim is made for image files.
 
 ## 5. Limitations
 
@@ -67,14 +92,26 @@ The verified citations of **design.md §19** (all fetched and checked during M1;
 ```
 docs/design.md            pre-registered design + full revision history (§20)
 docs/results-minimal.md   findings of the minimal experiment, traceable to results/
-docs/review-package.md    review package for the human owner (commit decision)
+docs/review-package.md    historical review package for the first-commit decision (dated annotation at top)
 docs/mutation-evidence.md mechanically generated mutation-sensitivity evidence (13 defects)
+docs/release-notes-v0.1.0.md        DRAFT release notes — nothing is released
+docs/reproduction-protocol.md       cold-start reproduction protocol for external researchers
+docs/ci-reproduction-assessment.md  what CI does and does not verify (full-repro workflow: never run)
+docs/prereg-p2zero-outline.md       draft outline for a future control experiment (not executed)
+docs/phase-a-review-package.md      Phase A review package for the v0.1.0 seal decision
 src/zne_scars/            all physics/statistics modules (importable, side-effect-free)
 tests/                    test suite incl. the pre-registered T1–T6 properties (run pytest for the live count)
 scripts/run_minimal.py    executes design §15 exactly; orchestration only
 scripts/make_figures.py   regenerates figures from recorded results only
+scripts/_canonical_guard.py  shared write-guard refusing the frozen canonical directories
+tools/verify_reproduction.py tested reproduction verifier (unhashed; the single comparison entry point)
+tools/release_identity.json  sealed v0.1.0 source identity (hash of src/, scripts/, pyproject, requirements)
 results/minimal/          the recorded experiment (deterministic, 6 files)
 figures/                  generated exclusively from results/minimal/
+.github/workflows/        tests.yml (unit suite on push/PR) + full-reproduction.yml (manual; never run)
 requirements.txt          pinned environment (pip freeze --exclude-editable)
 pyproject.toml            packaging + pytest configuration
+LICENSE                   Apache-2.0
+CITATION.cff              citation metadata (real DOI added only at release time)
+.gitignore                excludes venv/caches and the default reproduction-output directories
 ```

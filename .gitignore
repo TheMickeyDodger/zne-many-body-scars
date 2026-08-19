@@ -3,3 +3,7 @@ __pycache__/
 *.pyc
 .pytest_cache/
 *.egg-info/
+# default reproduction-output directories (see README §4); canonical outputs
+# live in results/minimal/ and figures/, which stay tracked
+results/repro/
+figures-repro/

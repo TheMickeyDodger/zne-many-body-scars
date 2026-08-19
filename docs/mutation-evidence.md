@@ -1,5 +1,10 @@
 # Mutation-Sensitivity Evidence
 
+> *[2026-08-18, Phase A annotation: the captured transcripts below are verbatim
+> from this document's generation time, when the suite was 52 tests; the suite
+> has since grown (run `pytest` for the live count). The 13 mutation entries and
+> their captured failures are unaffected.]*
+
 Each entry below was generated mechanically by a runner script: apply the stated single mutation to the working tree, run the named test(s), capture the REAL failing output verbatim, revert, and continue. The final section proves the tree was fully reverted and the whole suite passes. Regenerate at any time by repeating the edits shown and running the named tests.
 
 **Mutation count (mechanical, from this file's entries): 13**

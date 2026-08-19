@@ -4,6 +4,11 @@
 Orchestration only: every physical/statistical definition lives in src/zne_scars/.
 Outputs are deterministic (no timestamps, no absolute paths); wall-clock timing
 goes to stdout only. Run:  .venv/bin/python scripts/run_minimal.py [--out DIR]
+
+Writing into either frozen canonical directory (results/minimal/ or figures/) is
+refused — adding files included — unless --allow-canonical-overwrite is passed
+explicitly; the default --out is a fresh reproduction directory. The shared
+guard lives in scripts/_canonical_guard.py.
 """
 
 from __future__ import annotations
@@ -19,6 +24,8 @@ from importlib.metadata import distributions
 from pathlib import Path
 
 import numpy as np
+
+from _canonical_guard import CANONICAL_RESULTS, resolve_out_dir
 
 from zne_scars.executors import (
     SHOTS_DEFAULT,
@@ -82,8 +89,8 @@ def fmt_opt(x: float | None) -> str:
 def source_tree_hash() -> str:
     """Immutable source identifier: sha256 over the sorted relative paths and
     contents of src/, scripts/, pyproject.toml, requirements.txt. A content
-    hash, NOT a VCS revision — this repository has no commits and creating one
-    is out of scope for the experiment."""
+    hash, NOT a VCS revision — it identifies the exact source that produced a
+    run independent of version-control state."""
     root = Path(__file__).resolve().parent.parent
     files = sorted(
         [*root.glob("src/**/*.py"), *root.glob("scripts/*.py"),
@@ -94,6 +101,15 @@ def source_tree_hash() -> str:
         digest.update(str(path.relative_to(root)).encode() + b"\0")
         digest.update(path.read_bytes() + b"\0")
     return digest.hexdigest()
+
+
+# Emitted verbatim into environment.json; tools/verify_reproduction.py validates
+# recorded values against this constant, so keep it importable as a constant.
+SOURCE_IDENTIFIER_NOTE = (
+    "content hash over sorted src/**/*.py, scripts/*.py, pyproject.toml, "
+    "requirements.txt — not a VCS revision; identifies the exact source "
+    "that produced this run independent of version-control state"
+)
 
 
 def environment_record() -> dict:
@@ -126,21 +142,27 @@ def environment_record() -> dict:
         },
         "versions": {"python": platform.python_version(), "packages": packages},
         "source_tree_sha256": source_tree_hash(),
-        "source_identifier_note": (
-            "content hash over sorted src/**/*.py, scripts/*.py, pyproject.toml, "
-            "requirements.txt — not a VCS revision (repository has no commits; "
-            "version-control writes are out of scope)"
-        ),
+        "source_identifier_note": SOURCE_IDENTIFIER_NOTE,
         "platform": {"system": platform.system(), "machine": platform.machine(),
                      "blas": blas_info},
     }
 
 
-def main() -> None:
+def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--out", default="results/minimal")
-    args = parser.parse_args()
-    out = Path(args.out)
+    parser.add_argument("--out", default="results/repro")
+    parser.add_argument(
+        "--allow-canonical-overwrite", action="store_true",
+        help="explicitly permit writing into a frozen canonical directory "
+             "(results/minimal/ or figures/); never used by the documented "
+             "reproduction procedure",
+    )
+    return parser
+
+
+def main() -> None:
+    args = build_parser().parse_args()
+    out = resolve_out_dir(args.out, args.allow_canonical_overwrite)
     out.mkdir(parents=True, exist_ok=True)
 
     t_start = time.monotonic()
