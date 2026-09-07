@@ -1,23 +1,20 @@
 # Cold-Start Reproduction Protocol
 
-> **Post-release annotation, 2026-09-06.** §0 below says the cross-platform
-> 1e-12 expectation is being tested rather than confirmed "until
-> cross-platform runs are on record". One such run now exists. On 2026-09-06
-> an operator-approved run of `.github/workflows/full-reproduction.yml` (run
-> `34063462240`, ubuntu-latest, Python 3.12.14, sealed source identity
-> confirmed, identical pins) re-executed the experiment and failed the 1e-12
-> comparison. Values in `steps.csv` and `seed_arms.csv` were beyond 1e-12,
-> including density-matrix-derived quantities, while `shot_values.csv` was
-> byte-identical and `folded_circuits.csv` and `metrics.json` agreed to
-> 1e-12. The cause is unresolved. The dated annotation at the top of
-> `docs/ci-reproduction-assessment.md` has the per-file detail, identifiers,
-> and claim status.
+> **Update, 2026-09-06.** Section 0 says that no cross-platform run was on
+> record. That is no longer true. Full-reproduction run `34063462240` used
+> ubuntu-latest, Python 3.12.14, the expected source, and the pinned
+> dependencies. The experiment completed, but the comparison failed at the
+> required tolerance of 1e-12. Some values in `steps.csv` and
+> `seed_arms.csv` differed by more than 1e-12, including values from the
+> density-matrix pipeline. `shot_values.csv` was byte-identical, while
+> `folded_circuits.csv` and `metrics.json` agreed to 1e-12. The cause is
+> unknown. See `docs/ci-reproduction-assessment.md` for the file-by-file
+> results.
 >
-> For a reproducer nothing changes: the 1e-12 contract below stands, and if
-> your run shows a similar deviation, report it as a finding under §6 rather
-> than adjusting the tolerance, the verifier, or the pins. Same-hardware byte
-> identity (Case A) is unaffected by this off-platform result. The protocol
-> below is unedited.
+> Continue to use the 1e-12 tolerance below. If your run differs, report the
+> result under §6; do not change the tolerance, verifier, or dependency pins.
+> The failed Linux run does not affect the same-hardware result in Case A.
+> The original protocol follows unchanged.
 
 For an external researcher with no access to the original machine and no
 knowledge of this project's history. Everything you need is in this repository;

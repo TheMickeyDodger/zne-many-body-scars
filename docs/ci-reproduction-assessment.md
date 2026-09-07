@@ -1,39 +1,29 @@
 # CI Reproduction: What Is Verified, What Is Not (A3 assessment)
 
-> **Post-release annotation, 2026-09-06.** The "NEVER RUN" status line and
-> the "never run" table cell below were true when this assessment was
-> written on 2026-08-18 and are now historical. The A3 assessment itself is
-> kept unedited, so its present tense refers to 2026-08-18. What follows is
-> the one run now on record. No claim changes because of it, in either
-> direction.
+> **Update, 2026-09-06.** This assessment was written on 2026-08-18. Its
+> statements that the workflow had never run were accurate then but are now
+> out of date. The original assessment remains below this update.
 >
-> **The run.** `.github/workflows/full-reproduction.yml` was dispatched once,
-> as an operator-approved run of the existing workflow. The documentation
-> task's agents did not trigger, cancel, re-run, or modify any workflow. Run
-> `34063462240`, `head_sha` `1822597ed5e222ac770e0f619d0bfa62e8276c20`,
-> `created_at` `2026-09-06T22:15:05Z`, `conclusion=failure`, updated
-> `2026-09-06T22:24:00Z`; public record:
-> <https://github.com/TheMickeyDodger/zne-many-body-scars/actions/runs/34063462240>.
-> Checkout and setup, the pinned dependency install, the unit suite
-> including the sealed-identity guard test, and the full experiment
-> re-execution into the guarded fresh directory all succeeded. So did the
-> upload of the `reproduction-bundle` artifact (artifact id `9998323512`,
-> SHA-256 `e255fd5d7dd1e4e9d442c57dea1c01d8914da0c66644e044c60807ad72e7bb9c`).
-> The step "Verify against the canonical bundle" failed with exit 1. Its
-> log: `gh run view 34063462240 --log-failed`.
+> The repository owner ran `.github/workflows/full-reproduction.yml` once.
+> [Run 34063462240](https://github.com/TheMickeyDodger/zne-many-body-scars/actions/runs/34063462240)
+> used commit `1822597ed5e222ac770e0f619d0bfa62e8276c20`. It started at
+> `2026-09-06T22:15:05Z`, finished at `2026-09-06T22:24:00Z`, and failed.
+> Checkout, dependency installation, the unit tests, the source-identity
+> check, and the experiment all succeeded. The workflow also uploaded
+> artifact `9998323512` with SHA-256
+> `e255fd5d7dd1e4e9d442c57dea1c01d8914da0c66644e044c60807ad72e7bb9c`.
+> Only the final comparison with the canonical data failed. Use
+> `gh run view 34063462240 --log-failed` to read that log.
 >
-> **Two verdicts appear in the log, and they mean different things.** The
-> experiment step printed its own rounded headline,
+> **The scientific result and the reproduction check are separate.** The
+> experiment printed
 > `VERDICT (§13, density-matrix primary): PASS | GIF=1.2777 | m=39 wins=39`.
-> That is the re-executed experiment's pre-registered §13 verdict at display
-> precision. The verifier step then printed
-> `VERDICT: FAIL — 609 problem(s).`, the comparison verdict at the §16
-> tolerance. The first line is not a verifier pass and is not evidence of
-> cross-platform reproduction. The primary pipeline did not pass the
-> verifier.
+> This is the rounded §13 result from the re-executed experiment. The
+> reproduction check then printed `VERDICT: FAIL — 609 problem(s).` at the
+> §16 tolerance. A passing scientific result does not mean the files passed
+> cross-platform comparison.
 >
-> **Per-file verifier result** (off-platform mode, 1e-12 absolute, as the
-> table below pre-declared):
+> **File comparison at an absolute tolerance of 1e-12:**
 >
 > | Canonical file | Verifier result |
 > |---|---|
@@ -43,7 +33,7 @@
 > | `metrics.json` | not byte-identical; numerically identical to 1e-12 |
 > | `shot_values.csv` | **byte-identical** |
 >
-> The six `steps.csv` deviations, verbatim from the log. The format is
+> The six `steps.csv` differences are copied from the log. The format is
 > `file:line:column`, with line 1 the header, so line 5 is the $n = 4$ row:
 >
 > ```
@@ -55,10 +45,8 @@
 > steps.csv:38:shot_secondary_std:      |0.23798390899683874 - 0.23798390844059475| > 1e-12
 > ```
 >
-> **Recount from public inputs.** Every number in this note can be
-> reproduced without re-running the experiment. From the repository root,
-> with the pinned `.venv` and an authenticated `gh` (the artifact is public;
-> `gh` supplies the download token GitHub requires):
+> **Check the comparison without rerunning the experiment.** From the
+> repository root, use the pinned `.venv` and an authenticated `gh` client:
 >
 > ```bash
 > # 1. Retrieve the run's uploaded artifact (id 9998323512) and check its digest
@@ -87,18 +75,10 @@
 > gh run view 34063462240 --log-failed
 > ```
 >
-> Public record of the run and artifact:
-> <https://github.com/TheMickeyDodger/zne-many-body-scars/actions/runs/34063462240>
-> and
-> <https://github.com/TheMickeyDodger/zne-many-body-scars/actions/runs/34063462240/artifacts/9998323512>.
-> Steps 2 and 3 were executed on 2026-09-06 against the retrieved artifact
-> and reproduced the verifier verdict and the table below exactly. The
-> internal audit records
-> `.herd/state/task-evidence-20260906/ci-numeric-audit.json`,
-> `lead-env/ci-numeric-recheck.log`, `ci-artifact-local-verifier.log`, and
-> `executor/public-command-tests.log` (the last three also under
-> `.herd/state/task-evidence-20260906/`) are provenance only: not shipped
-> with the release and not needed to verify any claim here.
+> The [run](https://github.com/TheMickeyDodger/zne-many-body-scars/actions/runs/34063462240)
+> and [artifact](https://github.com/TheMickeyDodger/zne-many-body-scars/actions/runs/34063462240/artifacts/9998323512)
+> are public. On 2026-09-06, steps 2 and 3 reproduced the verifier result and
+> the counts below.
 >
 > | File | Values beyond 1e-12 / values compared | Max abs deviation |
 > |---|---|---|
@@ -112,21 +92,20 @@
 > 305. Example: `seed_arms.csv:2:secondary_avoid_log:
 > |-0.8838112234362765 - -0.8838112226706908| > 1e-12`.
 >
-> **The failure is not confined to the shot pipeline.** `steps.csv:5:if_value`,
+> **The failure is not limited to the shot pipeline.** `steps.csv:5:if_value`,
 > the density-matrix primary's IF at $n = 4$, and the `secondary_avoid_log`
 > column of `seed_arms.csv` are density-matrix-derived quantities, and they
-> exceeded 1e-12. The raw `shot_values.csv` was byte-identical. So the
-> pre-declared "known legitimate failure mode" of claims-ledger item 2 below,
-> cross-platform shot determinism across `qiskit-aer` builds, does not by
-> itself explain this outcome.
+> exceeded 1e-12. The raw `shot_values.csv` was byte-identical. Differences
+> in cross-platform shot generation therefore cannot explain the result by
+> themselves.
 >
-> **What was identical and what differed.** The artifact's `environment.json`
+> **Environment.** The artifact's `environment.json`
 > from step 1 was compared with `results/minimal/environment.json` and
 > `tools/release_identity.json`. The CI run recorded `source_tree_sha256`
-> `ab751d691a4cc3fc623b6044ef70dead0b54df46c0f33f880e574f7a828d6ca2`, equal
-> to the sealed v0.1.0 identity in `tools/release_identity.json`, and its
-> `source_identifier_note` equals the sealed note. The run therefore executed
-> the sealed release source, and provenance validation is not what failed.
+> `ab751d691a4cc3fc623b6044ef70dead0b54df46c0f33f880e574f7a828d6ca2`, which
+> matches the v0.1.0 identity in `tools/release_identity.json`. Its
+> `source_identifier_note` also matched. The workflow therefore used the
+> expected source.
 >
 > `versions.python` was 3.12.14 on both sides, as the workflow pins. Pinned
 > package versions were identical between the canonical bundle and the CI
@@ -134,33 +113,24 @@
 > Darwin / arm64 / BLAS `accelerate` (version `unknown`) versus CI Linux /
 > x86_64 / BLAS `scipy-openblas` 0.3.29.
 >
-> The deviation cannot be attributed to a source-identity, Python-version, or
-> dependency-pin mismatch. **Its cause is unresolved.** No explanation is
-> offered and no fix is proposed.
+> The source, Python version, and pinned dependencies all matched. The cause
+> of the numerical differences is unknown.
 >
-> **Claim status.** This is a real, unresolved, reportable cross-platform
-> reproduction finding. Claims-ledger item 3 below anticipated the case: "a
-> red run does not automatically mean the artifact is broken ... the
-> verifier's per-file, per-field output is the claim". design.md §16's
-> cross-platform 1e-12 expectation has been tested once and not confirmed.
-> Nothing is upgraded and nothing is loosened: 1e-12 stands as written in
-> the verifier and in every document, and the ledger still governs any
-> future claim change.
+> **Conclusion.** The only cross-platform run on record did not meet the
+> 1e-12 expectation in design.md §16. The cause is unresolved. The tolerance
+> remains 1e-12.
 >
-> The v0.1.0 verdict is defined by the pre-registered §13 metrics on the
-> recorded canonical data and is not affected; this finding concerns
-> cross-platform reproduction only. The same-hardware byte-identity claim, as
-> scoped in README §4 and design.md §16, is unaffected by this Linux-runner
-> result.
+> This finding concerns reproduction across platforms. It does not change
+> the v0.1.0 result calculated from the recorded data or the same-hardware
+> byte-identity result described in README §4 and design.md §16.
 >
-> **Local evidence.** The pinned suite still passes locally (116 passed,
+> The pinned test suite still passes locally (116 passed,
 > `.venv/bin/python -m pytest -q`, Python 3.12.14 on the macOS/arm64 platform
-> class). Because the records deliberately hold no machine identity
-> (README §4, design.md §16/A2-5), that is not a claim that the local machine
-> is the original canonical machine.
->
-> Closing this finding needs no code, science, or pin change from the
-> documentation task; any such change is a separate, escalated decision.
+> class). The records do not identify the physical machine, so this does not
+> establish that the local machine is the one used for the canonical run
+> (README §4, design.md §16/A2-5).
+
+## Original assessment from 2026-08-18
 
 **Status: the workflow (`.github/workflows/full-reproduction.yml`) exists and is
 YAML-valid, but has NEVER RUN.** Nothing in this repository may describe its

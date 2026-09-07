@@ -1,10 +1,10 @@
 # v0.1.0 Release Notes — DRAFT
 
-> **Post-release annotation, 2026-09-06.** The "DRAFT ONLY" banner and the
-> "DRAFT" in the title were true when this document was written on
-> 2026-08-18. They and the whole body are kept unedited as release history;
-> the current state is below. Each fact can be checked at the public
-> sources: the GitHub release page
+> **Update, 2026-09-06.** These notes were drafted on 2026-08-18, before the
+> release was published. The original notes, including the DRAFT title and
+> banner, follow this update unchanged.
+>
+> Sources: the GitHub release page
 > <https://github.com/TheMickeyDodger/zne-many-body-scars/releases/tag/v0.1.0>
 > and its API record
 > <https://api.github.com/repos/TheMickeyDodger/zne-many-body-scars/releases/tags/v0.1.0>;
@@ -13,37 +13,28 @@
 > the Zenodo record <https://zenodo.org/records/22005535> and its API view
 > <https://zenodo.org/api/records/22005535>; the DOIs
 > <https://doi.org/10.5281/zenodo.22005535> (version) and
-> <https://doi.org/10.5281/zenodo.22005534> (concept). The Supervisor's
-> read-only public-state audit of 2026-09-06,
-> `.herd/state/task-evidence-20260906/public-audit.md`, with raw API
-> responses beside it, is internal provenance only: not shipped with the
-> release and not needed to verify any claim here.
+> <https://doi.org/10.5281/zenodo.22005534> (concept).
 >
-> - **The release is published.** GitHub release `v0.1.0`: `draft=false`,
+> - **GitHub release.** Release `v0.1.0` has `draft=false`,
 >   `prerelease=false`, `published_at` `2026-08-19T03:40:16Z`, which is
 >   2026-08-18 at 23:40 America/New_York. Tag `v0.1.0` is a lightweight ref
->   to revision `51f55c1bb43f5f6c344c0f6ecaa2d1975aa27526`. That is not the
->   current HEAD: at the time of this annotation HEAD was
+>   to commit `51f55c1bb43f5f6c344c0f6ecaa2d1975aa27526`. At the time of
+>   this update, HEAD was
 >   `1822597ed5e222ac770e0f619d0bfa62e8276c20`, which added the Zenodo DOI to
->   `CITATION.cff` after the tag. Keep the two identities apart.
-> - **The archive is published.** Zenodo record `22005535`, version v0.1.0,
+>   `CITATION.cff` after the tag.
+> - **Zenodo archive.** Record `22005535` contains version v0.1.0,
 >   version DOI `10.5281/zenodo.22005535`, concept DOI
 >   `10.5281/zenodo.22005534`, Zenodo `publication_date` 2026-08-19. The
 >   archive file is `TheMickeyDodger/zne-many-body-scars-v0.1.0.zip`, published
 >   checksum `md5:fcbe8865151f9e22cb6bba36fe7924fc`. The version DOI names
 >   this archived version; the concept DOI names the record across all its
->   versions and resolves to the latest. `CITATION.cff` cites the concept
->   DOI, a deliberate choice and not an error.
-> - **The archive contents match the repository.** On 2026-09-06 the
->   Supervisor downloaded the published Zenodo zip, confirmed its public MD5,
->   and compared all 22 protected files against the repository baseline. The
+>   versions and resolves to the latest. `CITATION.cff` cites the concept DOI.
+> - **File comparison.** On 2026-09-06, the published Zenodo zip matched its
+>   listed MD5. All 22 protected files also matched the repository. The
 >   22 are the canonical 8 in `results/minimal/` and `figures/`, plus `src/`,
 >   `scripts/`, `requirements.txt`, `pyproject.toml`, and
->   `tools/release_identity.json`. This was part of the closure audit, not a
->   claim carried over from release time. All 22 match. The check can be
->   repeated from public inputs at the root of a checkout of tag `v0.1.0` or
->   of the current HEAD. The 22 files are identical at both, and only
->   `CITATION.cff` differs:
+>   `tools/release_identity.json`. The same files appear at tag `v0.1.0` and
+>   at the current HEAD; only `CITATION.cff` differs. To repeat the check:
 >
 >   ```bash
 >   curl -sL -o zne-v0.1.0.zip "https://zenodo.org/api/records/22005535/files/TheMickeyDodger/zne-many-body-scars-v0.1.0.zip/content"
@@ -53,33 +44,25 @@
 >   # expect 22 MATCH lines and no DIFF
 >   ```
 >
->   Run on 2026-09-06 against the retrieved zip, the loop printed 22 MATCH.
->   Per-file SHA-256 values are in the internal record
->   `.herd/state/task-evidence-20260906/zenodo-archive-audit.json`, which is
->   not shipped and not needed to verify the claim.
-> - **The date fields differ only by time zone.** `CITATION.cff` records
+>   On 2026-09-06, this loop printed 22 MATCH lines and no DIFF lines.
+> - **Release date.** `CITATION.cff` records
 >   `date-released: 2026-08-18`, the release's calendar date in
 >   America/New_York; GitHub and Zenodo record 2026-08-19 in UTC. Both refer
->   to the same event, minutes apart. This documentation update leaves
->   `CITATION.cff` unchanged; its metadata and authorship are out of scope.
-> - **One discrepancy is open.** The published GitHub release body still
+>   to the same event, minutes apart. This update does not change
+>   `CITATION.cff`.
+> - **Old disclaimer on GitHub.** The published release body still
 >   contains this document's historical DRAFT disclaimer, so the remote
 >   release text and the repository text differ. The body is visible on the
 >   release page and in the `body` field of the release API record linked
->   above.
->   Any change to the published release text is the release owner's
->   decision. The documentation task did not and will not modify remote
->   content.
-> - The operational statements below (test count, wall clock) remain the
->   dated 2026-08-18 observations they were labeled as. The full-reproduction
->   workflow, described elsewhere as never run, now has one operator-approved
->   run on record (2026-09-06,
+>   above. This repository update does not alter the published release text.
+> - **Full-reproduction workflow.** The original notes say this workflow had
+>   never run. It now has one run on record (2026-09-06,
 >   <https://github.com/TheMickeyDodger/zne-many-body-scars/actions/runs/34063462240>)
->   whose verifier step failed. The dated annotation at the top of
->   `docs/ci-reproduction-assessment.md` records it in full; no claim in these
->   notes changes because of it.
->
-> Nothing below this line has been edited.
+>   whose final comparison failed. `docs/ci-reproduction-assessment.md`
+>   gives the results. The test count and runtime below remain the dated
+>   observations recorded on 2026-08-18.
+
+## Original release notes from 2026-08-18
 
 > **DRAFT ONLY. No tag, release, or archive exists. This document is a proposal
 > for the release owner; publishing it, and the release itself, require

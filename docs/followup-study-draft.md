@@ -1,61 +1,51 @@
-# Follow-up Study Draft — Proposed Charts, Definitions, and Traceability
+# Phase 2 Planning Notes: Charts and Analysis
 
-> **Draft proposal, prepared 2026-09-06.** Not a preregistration, not
-> reviewed for execution, and not approved for execution. No part of the
-> proposed study has been run: there is no $p_2 = 0$ arm, no $p_1 = 0$ arm,
-> no factorial arm, no data for any of them, and no code for any of them in
-> this repository.
+> As of 2026-09-06, work on Phase 2 has not started. This document lays out
+> possible work; it is not a preregistration or an approved study. The
+> $p_2 = 0$, $p_1 = 0$, and factorial experiments have not been written or
+> run, so no data exist for them.
 >
-> The Tier A recomputation commands in §5 were run, read-only, against the
-> frozen v0.1.0 bundle to confirm that they work as written; that produced no
-> new evidence and wrote nothing to the repository.
+> The Tier A commands in §5 were tested against the v0.1.0 data. They only
+> read existing files and did not produce new scientific results.
 >
-> Before any run, this draft would have to become a full frozen
-> preregistration in the style of `docs/design.md`, with its own adversarial
-> review, and every provisional interval, mask, and tolerance listed in §6
-> would have to be frozen there.
+> Before running Phase 2, this document must be expanded into a
+> preregistration like `docs/design.md` and reviewed. That preregistration
+> must set the intervals, mask, and tolerances listed in §6.
 >
-> Nothing here alters the v0.1.0 verdict, which is defined by the
-> pre-registered metrics of design.md §13 on the recorded canonical data and
-> reported with its qualifications in `docs/results-minimal.md`. Nothing here
-> is published as a result, and nothing will be executed without explicit
-> human authorization.
+> The v0.1.0 result remains unchanged. It comes from the metrics in
+> design.md §13 and the recorded data, with the limitations reported in
+> `docs/results-minimal.md`. Phase 2 requires explicit approval before any
+> code is written or any experiment is run.
 
-## 0. Purpose and scope
+## 0. What this document covers
 
-This draft proposes charts for a follow-up analysis. Each chart is pinned
-to exact source files and column names of the frozen bundle, or to a named
-future arm (§3). Every plotted or derived quantity is defined by its symbol,
-formula, falsifiable assumptions, and degenerate cases with their
-pre-declared handling. Frozen v0.1.0 definitions are reused by
-citation wherever one exists (§4). Every quantity has a read-only
-recomputation command (§5). A traceability matrix ties every chart and
-quantity to its source, formula, governing definition, and command (§7).
+This document describes six possible charts. For each chart it names the
+source files and columns, defines the calculations, lists the assumptions
+that can be checked, and explains how to handle cases in which a calculation
+is undefined. Section 5 provides commands for calculations that can be run
+with the existing data. Section 7 maps each chart and quantity to its data,
+formula, design reference, and command.
 
-Out of scope: hardware claims (design.md §14(d)); any change to the v0.1.0
-definitions, numbers, tolerances, or pins; and resolution of the open items
-in §6. Also out of scope is the cross-platform reproduction question
-recorded in the dated annotation of `docs/ci-reproduction-assessment.md`
-(2026-09-06). That is a reproduction-verification matter and gets no chart,
-experiment, or diagnosis here.
+This work does not address hardware (design.md §14(d)), change any v0.1.0
+definition or result, or settle the open questions in §6. It also does not
+investigate the cross-platform reproduction failure recorded in
+`docs/ci-reproduction-assessment.md` on 2026-09-06.
 
-**Numbers policy.** The only result numbers asserted here already appear in
-`results/minimal/metrics.json`, `docs/results-minimal.md`, or
-`docs/release-notes-v0.1.0.md`, and are cited where used. Every other
-quantity is given as a formula plus a runnable command. Structural facts
-(row counts, column names, seed counts) were checked against the files on
-2026-09-06.
+Any result quoted here already appears in `results/minimal/metrics.json`,
+`docs/results-minimal.md`, or `docs/release-notes-v0.1.0.md`. Other
+quantities are presented as formulas with commands that calculate them. The
+row counts, column names, and seed counts were checked on 2026-09-06.
 
 ## 1. The two tiers
 
-| Tier | Meaning | Evidentiary status |
+| Tier | Available data | How it may be used |
 |---|---|---|
-| **A: recomputable today** | Inputs exist in the frozen v0.1.0 bundle: `results/minimal/steps.csv`, `metrics.json`, `folded_circuits.csv`, `seed_arms.csv`, `shot_values.csv`, `environment.json`. | Post-hoc diagnostics on recorded data, with the same standing as the labeled oracles of `docs/results-minimal.md` §9. Not preregistered, not new evidence, never a verdict. |
-| **B: needs arms that do not exist** | Needs the $p_2 = 0$ control arm $(p_1, p_2) = (10^{-3}, 0)$, the $p_1 = 0$ control arm $(0, 10^{-2})$, or both (the full $2 \times 2$ factorial). | No input data. The command is specified but cannot be run today. No outcome is predicted. |
+| **A: can be calculated now** | The required inputs are in the v0.1.0 data: `results/minimal/steps.csv`, `metrics.json`, `folded_circuits.csv`, `seed_arms.csv`, `shot_values.csv`, and `environment.json`. | These are post-hoc checks of recorded data, like the labeled oracle calculations in `docs/results-minimal.md` §9. They do not change the preregistered result. |
+| **B: requires new experiments** | These calculations need the $p_2 = 0$ control arm $(p_1, p_2) = (10^{-3}, 0)$, the $p_1 = 0$ control arm $(0, 10^{-2})$, or both. | The commands are plans only. The required data do not exist, and this document does not predict the results. |
 
 Each item below carries its tier in its heading.
 
-## 2. Inputs that exist (frozen bundle inventory, checked 2026-09-06)
+## 2. Available data (checked 2026-09-06)
 
 All under `results/minimal/`. Row counts exclude the header line. Column
 names are exactly as they appear in the CSV headers.
@@ -128,12 +118,12 @@ qualification.
   `shot_if_is_lower_bound`, `shot_reportable`. Cross-check against
   `results/minimal/metrics.json`: `if_wins`, `reportable_steps_m`,
   `excluded_steps` (and the same under `shot_pipeline`).
-- **Filter predicate:** none applied. The chart marks the majority-test
+- **Filter:** none. The chart marks the majority-test
   mask `reportable == 1`, which by design.md §13 is
   $\varepsilon_u(n) \ge \varepsilon_{\min} = 0.01$.
-- **Licenses:** a visual restatement of the recorded §13 quantities and of
-  qualification 1 of the release notes (regime dependence). **Does not
-  license:** any new verdict, any claim about late-$n$ behavior beyond
+- **What it shows:** the recorded §13 quantities and the regime dependence
+  described in qualification 1 of the release notes. **What it does not
+  show:** a new verdict, any claim about late-$n$ behavior beyond
   "IF → 1" (design.md §13 saturation bullet: the metrics cannot there
   distinguish ZNE failure from absence of signal), or any hardware statement.
 - **Quantities:** Q1 (both pipelines; R-1 recomputes the density-matrix
@@ -152,10 +142,10 @@ qualification.
   $\lambda = 1$ gate counts and the recorded rates (Q4). The heuristic is a
   reference curve, not a fit and not a prediction under test; design.md §11
   calls it "a heuristic, not a theorem".
-- **Markers:** filled where the provisional mask $|E_0(n)| \ge 0.1$ holds,
-  hollow where it does not. The mask is the one proposed provisionally in
-  `docs/prereg-p2zero-outline.md` §4. It is unfrozen and is used here only to
-  keep ill-conditioned near-node ratios visually distinct.
+- **Markers:** filled where the proposed mask $|E_0(n)| \ge 0.1$ holds,
+  hollow where it does not. The threshold comes from
+  `docs/prereg-p2zero-outline.md` §4, but it is not final. Here it only keeps
+  ill-conditioned ratios near the oscillation nodes visually distinct.
 - **Bands:** none. The density-matrix pipeline is exact under the noise
   model, with zero sampling variance (`docs/results-minimal.md` §6), and
   $E_{\text{noisy}}(n)$ at $\lambda = 1$ is seed-independent (design.md §13).
@@ -164,14 +154,14 @@ qualification.
   rows with `lambda_nominal == 1.0`: `n`, `cx`, `sx`, `x`, `sxdg`;
   `results/minimal/environment.json`: `parameters.noise.p1`,
   `parameters.noise.p2`.
-- **Filter predicate:** display-only mask `abs(e0_trotter) >= 0.1` (source:
+- **Filter:** display-only mask `abs(e0_trotter) >= 0.1` (source:
   outline §4, provisional). No row is dropped.
-- **Licenses:** an exploratory picture of the discrepancy already recorded in
+- **What it shows:** the discrepancy already recorded in
   `docs/results-minimal.md` §8 (observed decay roughly half the heuristic
-  rate), on the recorded total attenuation. **Does not license:** any
+  rate), on the recorded total attenuation. **What it does not show:** any
   apportionment between single- and two-qubit channels (outline §5; that
   requires the factorial, Tier B), any hypothesis verdict (the outline's
-  H-G/H-L intervals are unfrozen), or any statement about the true functional
+  H-G/H-L intervals are not final), or any statement about the true functional
   form of the response.
 - **Quantities:** Q3, Q4. **Command:** R-3, R-4.
 
@@ -192,10 +182,10 @@ qualification.
   `fold_seed`, `lambda_nominal`, `lambda_r`, `lambda_eff`, `cx`, `sx`, `x`,
   `sxdg`; `results/minimal/environment.json`: `parameters.noise.p1`,
   `parameters.noise.p2` (for recomputing `lambda_eff`).
-- **Filter predicate:** none.
-- **Licenses:** a check that the recorded abscissas obey the §10 statements
+- **Filter:** none.
+- **What it shows:** whether the recorded abscissas obey the §10 statements
   (quantization grid; $\lambda_{\text{eff}} \le \lambda_r$ with equality at
-  $\lambda_r = 1$). **Does not license:** anything about ZNE performance or
+  $\lambda_r = 1$). **What it does not show:** anything about ZNE performance or
   about which regression arm is better; those comparisons are already
   reported in `docs/results-minimal.md` §4 and are not revisited here.
 - **Quantities:** Q5. **Command:** R-5.
@@ -237,20 +227,19 @@ qualification.
   - Check: R-6 recomputes `shot_primary_mean`, `shot_primary_std`,
     `shot_primary_sem`, `shot_eps_m`, and `shot_eps_m_band` from the
     reconstructed intercepts, compares against `results/minimal/steps.csv`,
-    and prints its own maximum deviation. On 2026-09-06 an independent
-    reviewer reconstruction recovered `shot_eps_m_band` on all 40 steps with
-    a maximum absolute deviation of 1.3270634591222574e-16 from the recorded
-    column.
-- **Filter predicate:** none. Rows with `clamp_flag == 1` or
+    and prints its own maximum deviation. On 2026-09-06, this calculation
+    reproduced `shot_eps_m_band` for all 40 steps. Its largest absolute
+    difference from the recorded column was 1.3270634591222574e-16.
+- **Filter:** none. Rows with `clamp_flag == 1` or
   `secondary_avoid_log_failed == 1` concern the secondary, not this chart.
   A future variant that plots the secondary must show a flagged row as a
   marker with no value, never a substituted one (design.md §11 clamped-fit
   policy; §20 M3-3).
-- **Licenses:** a visual account of how small the density-matrix
+- **What it shows:** how small the density-matrix
   folding-configuration spread is relative to the error it decorates
   (already stated in `docs/results-minimal.md` §6), and of the size of the
   shot ensemble's seed-plus-sampling spread and SEM relative to the shot
-  error. **Does not license:** any uncertainty statement about the true
+  error. **What it does not show:** uncertainty in the true
   noiseless value, any significance claim, or any interpretation of the band
   as a probability interval.
 - **Quantities:** Q1, Q6 (R-6 recomputes the density-matrix seed statistics
@@ -259,14 +248,13 @@ qualification.
 
 ### FC-5 — Isolated single-qubit attenuation, $p_2 = 0$ control (Tier B)
 
-- **Status: no input data exist.** This chart needs the arm
-  $(p_1, p_2) = (10^{-3}, 0)$ described in `docs/prereg-p2zero-outline.md`,
-  which has not been executed, has no frozen preregistration, and has no code
-  in this repository. R-B1 specifies the command; it cannot run today.
-- **Plot type (as it would be):** two stacked panels. Upper: $\ln r_1(n)$
+- **Data required:** the $(p_1, p_2) = (10^{-3}, 0)$ arm described in
+  `docs/prereg-p2zero-outline.md`. No code or data exist for this arm, and
+  its preregistration has not been completed. R-B1 shows the planned command.
+- **Plot type:** two stacked panels. Upper: $\ln r_1(n)$
   vs `n` with the masked points filled and the OLS line drawn only if the
-  outline's adequacy gate passes and only after the residual tolerance has
-  been frozen. Lower: the per-step fit residuals $e(n)$ vs `n`, which R-B1
+  outline's adequacy gate passes and only after the preregistration sets the
+  residual tolerance. Lower: the per-step fit residuals $e(n)$ vs `n`, which R-B1
   prints explicitly, one line per masked step.
 - **x:** `n` (steps, linear). **y (upper):** $\ln r_1(n)$, dimensionless,
   linear. **y (lower):** residual $\ln r_1(n) - (a + b\,n)$, dimensionless,
@@ -278,71 +266,72 @@ qualification.
   `e_noisy_dm`. $E_0(n)$ is the same noiseless Trotter reference already
   recorded in `results/minimal/steps.csv` `e0_trotter`, and the future bundle
   must reproduce it, since it is noise-independent.
-- **Filter predicate (provisional, unfrozen):** `abs(e0_trotter) >= 0.1`,
+- **Proposed filter:** `abs(e0_trotter) >= 0.1`,
   computed from pre-result quantities only (outline §4). A sign flip
   (`r <= 0`) or `r > 1 + 1e-9` on any masked step means "model inadequate"
-  and no fit, per the outline's pre-declared gate. The $10^{-9}$ is a frozen
+  and no fit, under the rule in the outline. The $10^{-9}$ is a fixed
   policy tolerance, not a derived bound (outline §4).
-- **Licenses / does not license:** exactly the table in outline §5: isolated
-  single-channel statements only; no apportionment of the combined gap; no
-  effect on the v0.1.0 verdict. No outcome is predicted here.
+- **What it could show:** only the behavior of the isolated single-qubit
+  channel described in outline §5. It could not divide the combined gap
+  between channels or change the v0.1.0 result.
 - **Quantities:** Q3 (applied to the future arm), Q8. **Command:** R-B1.
 
 ### FC-6 — $2 \times 2$ factorial additivity check (Tier B)
 
-- **Status: no input data exist** for two of the four cells. The $(0, 0)$
+- **Available data:** two of the four cells. The $(0, 0)$
   cell is the recorded `e0_trotter` reference and the $(10^{-3}, 10^{-2})$
   cell is the recorded canonical noisy run, so the combined-arm rate $g_{12}$
   is a Tier A diagnostic (Q7). The control arms $(10^{-3}, 0)$ and
   $(0, 10^{-2})$, which give $g_1$ and $g_2$, do not exist. R-B2 specifies
-  the command; it cannot run today.
-- **Plot type (as it would be):** a point chart of the three fitted rates
+  the planned command, but it needs those two control arms.
+- **Plot type:** a point chart of the three fitted rates
   $g_1, g_2, g_{12}$ (dimensionless per step, linear y) and, in a second
   panel, the additivity residual $\Delta = g_{12} - (g_1 + g_2)$ with the
-  frozen additivity criterion drawn as a band. That band cannot be drawn
-  today because the criterion is not frozen (outline §5), and this draft does
-  not freeze it.
+  additivity residual $\Delta = g_{12} - (g_1 + g_2)$ with the permitted
+  range drawn as a band. That range has not been chosen (outline §5), so it
+  cannot yet be drawn.
 - **x:** categorical (the three arms; then the single residual). **y:** rate
   per step, dimensionless, linear.
-- **Bands:** none of statistical origin (exact pipeline); the only band is
-  the frozen criterion, once it exists.
+- **Bands:** none of statistical origin (exact pipeline). The only band will
+  show the permitted additivity range after that range has been set.
 - **Source / columns (future):** `steps.csv` of each new arm (`n`,
   `e0_trotter`, `e_noisy_dm`) plus the recorded `results/minimal/steps.csv`
   for the combined arm.
-- **Filter predicate:** the same provisional mask as FC-5, applied
+- **Proposed filter:** the same mask as FC-5, applied
   identically to all arms.
-- **Licenses / does not license:** per outline §5, the combined gap may be
-  decomposed only if the criterion was frozen before either new arm ran. A
-  failed additivity test is a reportable interaction finding, not a license
-  to apportion by subtraction. If either control is executed before the
-  criterion is frozen, this chart is post hoc by the outline's own rule and
-  must be labeled so.
+- **What it could show:** under outline §5, the combined gap may be divided
+  between the two channels only if the additivity rule is set before either
+  new arm runs. If the data fail that test, the channels interact and simple
+  subtraction is not justified. If either control runs before the rule is
+  set, the comparison must be described as post-hoc.
 - **Quantities:** Q7, Q8. **Command:** R-7 (for $g_{12}$ only, Tier A), R-B2.
 
 ## 4. Definitions and formulas
 
-Notation follows design.md §13 and `docs/results-minimal.md`: $E_0(n)$ is the
-noiseless Trotter reference (`e0_trotter`), $E_{\text{noisy}}(n)$ the
-unmitigated $\lambda = 1$ value (`e_noisy_dm`), $E_{\text{ZNE}}(n)$ the
-seed-averaged primary ZNE estimate (`zne_primary_mean`), $E^{(s)}_{\text{ZNE}}(n)$
-the per-seed primary intercept (`primary_intercept`), $s = 1..8$.
+The notation follows design.md §13 and `docs/results-minimal.md`. $E_0(n)$ is
+the noiseless Trotter reference (`e0_trotter`), and
+$E_{\text{noisy}}(n)$ is the unmitigated $\lambda=1$ value (`e_noisy_dm`).
+$E_{\text{ZNE}}(n)$ is the mean primary ZNE estimate
+(`zne_primary_mean`), while $E^{(s)}_{\text{ZNE}}(n)$ is the primary intercept
+for seed $s$ (`primary_intercept`), with $s=1,\ldots,8$.
 
-### Q1 — Per-step errors, improvement factor, relevance mask (frozen; design.md §13)
+### Q1 — Per-step errors and improvement factor
 
-**Definitions, reused verbatim from design.md §13:**
+As defined in design.md §13,
 $\varepsilon_u(n) = |E_{\text{noisy}}(n) - E_0(n)|$;
 $\varepsilon_m(n) = |E_{\text{ZNE}}(n) - E_0(n)|$;
-$\mathrm{IF}(n) = \varepsilon_u(n)/\varepsilon_m(n)$;
-reportable iff $\varepsilon_u(n) \ge \varepsilon_{\min} = 0.01$ (a
-baseline-relevance filter on the numerator, "not a denominator guard").
+$\mathrm{IF}(n) = \varepsilon_u(n)/\varepsilon_m(n)$. A step is reportable
+when $\varepsilon_u(n) \ge \varepsilon_{\min} = 0.01$. This filters out steps
+where the original error is too small to make the comparison useful; it does
+not protect the denominator.
 
-**Denominator handling (frozen, §13):** with $\delta = 10^{-9}$ (density
+Design.md §13 also sets the denominator rule. With $\delta = 10^{-9}$ (density
 matrix) or $10^{-3}$ (shot), if $\varepsilon_m(n) \le \delta$ then
 $\mathrm{IF}(n)$ is reported as the flagged lower bound
 $\varepsilon_u(n)/\delta$ (`if_is_lower_bound == 1`), never as a point value;
 no non-finite value enters any table.
 
-**Assumptions (falsifiable):**
+**Checks:**
 
 - The recorded columns equal these formulas applied to the recorded inputs,
   in both pipelines: density matrix from `e_noisy_dm`/`zne_primary_mean`,
@@ -360,25 +349,25 @@ no non-finite value enters any table.
   majority test only (the recorded case is $n = 34$: `metrics.json`
   `excluded_steps`).
 
-Nothing in this draft redefines any of these.
+These definitions are unchanged.
 
-### Q2 — Aggregates (frozen; design.md §13)
+### Q2 — Aggregate error and improvement
 
 $\mathrm{RMS}_u = \sqrt{\tfrac{1}{40}\sum_{n=1}^{40}\varepsilon_u(n)^2}$,
-$\mathrm{RMS}_m$ analogously, $\mathrm{GIF} = \mathrm{RMS}_u/\mathrm{RMS}_m$;
-"the RMS sums and GIF always run over all 40 steps; the baseline-relevance
-filter does not touch them" (§13). **Assumption:** exactly 40 rows, none
-missing (structural; R-2 asserts the row count). **Edge case:** none arises
-on the recorded data; a hypothetical $\mathrm{RMS}_m = 0$ would be governed by
-§13's `gif_is_lower_bound` flag, recorded in `metrics.json`. Recorded values
+$\mathrm{RMS}_m$ is defined in the same way, and
+$\mathrm{GIF} = \mathrm{RMS}_u/\mathrm{RMS}_m$. These calculations use all
+40 steps; the reportability filter does not apply (§13). R-2 checks that all
+40 rows are present. If $\mathrm{RMS}_m$ were zero, §13 would report GIF as a
+lower bound using the `gif_is_lower_bound` flag in `metrics.json`. That case
+does not occur in the recorded data. The recorded values
 (`metrics.json`): $\mathrm{RMS}_u = 0.32079729685433694$,
 $\mathrm{RMS}_m = 0.25106736243976785$, $\mathrm{GIF} = 1.2777339664421639$.
 
-### Q3 — Attenuation ratio and its log (exploratory; mask from the unfrozen outline §4)
+### Q3 — Attenuation ratio and its logarithm
 
 $$ r(n) = \frac{E_{\text{noisy}}(n)}{E_0(n)}, \qquad \ell(n) = \ln r(n), \qquad
 \mathcal{M} = \{\, n : |E_0(n)| \ge 0.1 \,\}. $$
-**Assumptions (falsifiable):**
+**Checks:**
 
 - $E_0(n) \ne 0$ (domain).
 - $|E_0(n)| \ge 0.1$ on the mask, so that the ratio is not ill-conditioned
@@ -390,20 +379,20 @@ $$ r(n) = \frac{E_{\text{noisy}}(n)}{E_0(n)}, \qquad \ell(n) = \ln r(n), \qquad
 - No independence assumption is needed: $E_{\text{noisy}}(n)$ at
   $\lambda = 1$ is a single deterministic value per step (design.md §13).
 
-**Edge cases, pre-declared handling:** if $E_0(n) = 0$, $r$ is undefined
+**When the calculation is undefined:** if $E_0(n) = 0$, $r$ is undefined
 and the row is reported as unmasked with no value. If $r(n) \le 0$ inside
 $\mathcal{M}$, that is a sign flip: $\ell$ is undefined, the step is
-reported, and no fit is performed. This mirrors the outline §4 adequacy gate
-as a diagnostic report, not a verdict. If $r(n) > 1 + 10^{-9}$ inside
+reported, and no fit is performed. This is the adequacy check described in
+outline §4. If $r(n) > 1 + 10^{-9}$ inside
 $\mathcal{M}$, the step is reported; the $10^{-9}$ is the outline's policy
 tolerance, a policy choice and not a derived bound. R-3 prints both the
 masked and the unmasked step lists.
-**Status:** the mask threshold 0.1 is provisional and unfrozen; using it here
-does not freeze it.
+The threshold 0.1 is still a proposal. Using it for this calculation does not
+make it part of the final analysis plan.
 
-### Q4 — Heuristic total exposure at $\lambda = 1$ (frozen form; design.md §11)
+### Q4 — Estimated total exposure at $\lambda = 1$
 
-Reused verbatim from §11: $\gamma_k \equiv -\ln(1 - p_k)$,
+Following §11, $\gamma_k \equiv -\ln(1 - p_k)$,
 $\Gamma_2 = N_2\gamma_2$, $\Gamma_1 = N_1\gamma_1$, with $N_2$ the total number
 of noisy two-qubit gate applications in the whole circuit at $\lambda = 1$ and
 $N_1$ the total number of noisy single-qubit gate applications including the
@@ -411,12 +400,12 @@ state-preparation $X$ gates. Define $\Gamma(n) = \Gamma_2(n) + \Gamma_1(n)$ and
 the heuristic reference curve $r_{\text{heur}}(n) = e^{-\Gamma(n)}$ (the §11
 curve $E(\lambda) \approx E_0 e^{-(\Gamma_2\lambda + \Gamma_1)}$ at
 $\lambda = 1$).
-**Operationalization on the bundle:** $N_2(n)$ = `cx` and
+For the existing data, $N_2(n)$ = `cx` and
 $N_1(n)$ = `sx + x + sxdg` from `folded_circuits.csv` rows with
 `lambda_nominal == 1.0`; the noisy gate classes are exactly
 `environment.json` `parameters.noise.two_qubit_gates` and
 `parameters.noise.one_qubit_gates`; `rz` is in `clean_gates` and is excluded.
-**Assumptions (falsifiable):**
+**Checks:**
 
 - The $\lambda = 1$ counts are identical across the 8 fold seeds at every
   $n$, because folding at $\lambda = 1$ returns the circuit unchanged
@@ -425,21 +414,21 @@ $N_1(n)$ = `sx + x + sxdg` from `folded_circuits.csv` rows with
   model attaches $p_1$ to it (design.md §8).
 
 **Edge cases:** $p_k = 0$ gives $\gamma_k = 0$ exactly; $p_k \to 1$ gives
-$\gamma_k \to \infty$ (not in range). **Status:**
-§11 calls the curve "a heuristic diagnostic", not a theorem, and
+$\gamma_k \to \infty$ (not in range). Section 11 calls the curve a heuristic,
+not a theorem, and
 `docs/results-minimal.md` §8 already records that the observed total decay is
-roughly half its rate. This quantity is a reference curve only.
+roughly half its rate. The curve is used only as a reference.
 
-### Q5 — Realized and effective scale factors (frozen; design.md §10)
+### Q5 — Realized and effective scale factors
 
-Reused verbatim from §10: $\lambda_r = N_{cx}^{\text{folded}}/N_{cx}^{\text{base}}$
+Following §10, $\lambda_r = N_{cx}^{\text{folded}}/N_{cx}^{\text{base}}$
 (measured from the folded circuit), and
 $$ \lambda_{\text{eff}} = \frac{\Gamma_2\,\lambda_r + \Gamma_1}{\Gamma_2 + \Gamma_1}
 \;\le\; \lambda_r, \quad \text{equality at } \lambda_r = 1, $$
-with $\Gamma_k$ as in Q4 at the given $n$. **Operationalization:**
+with $\Gamma_k$ as in Q4 at the given $n$. For the recorded data,
 $N_{cx}^{\text{folded}}$ = `cx` of the row; $N_{cx}^{\text{base}}$ = `cx` of
 the same-$n$ row with `lambda_nominal == 1.0`; rates from `environment.json`.
-**Assumptions (falsifiable):**
+**Checks:**
 
 - $N_{cx}^{\text{base}} > 0$ (it is $10n$, §10).
 - $\Gamma_1 + \Gamma_2 > 0$.
@@ -456,16 +445,18 @@ the same-$n$ row with `lambda_nominal == 1.0`; rates from `environment.json`.
 - For $\Gamma_1 = \Gamma_2 = 0$ the $0/0$ case is defined as
   $\lambda_{\text{eff}} = \lambda_r$ by design.md §20 M2-6.
 
-**Quantization (frozen, §10 item 2):** $\lambda_r \in \{1 + m/(5n)\}$;
+Section 10 also gives the quantization rule $\lambda_r \in \{1 + m/(5n)\}$;
 $\lambda = 1.5$ is exactly achievable only at even $n$.
 
-### Q6 — Seed-ensemble statistics (frozen; design.md §13 uncertainty bullet)
+### Q6 — Variation across seeds
 
-$\bar E_{\text{ZNE}}(n) = \tfrac18\sum_s E^{(s)}_{\text{ZNE}}(n)$;
-band $s_n$ = sample standard deviation with `ddof=1`; standard error
-$s_n/\sqrt{8}$; per-seed errors $\varepsilon^{(s)}_m(n) = |E^{(s)}_{\text{ZNE}}(n) - E_0(n)|$
-and their `ddof=1` standard deviation is the error band, "not obtained by
-linearized propagation through the absolute value" (§13). The same formulas
+$\bar E_{\text{ZNE}}(n) = \tfrac18\sum_s E^{(s)}_{\text{ZNE}}(n)$. Let $s_n$
+be the sample standard deviation across seeds, calculated with `ddof=1`; the
+standard error is $s_n/\sqrt{8}$. For the per-seed errors
+$\varepsilon^{(s)}_m(n) = |E^{(s)}_{\text{ZNE}}(n) - E_0(n)|$, the error band
+is their `ddof=1` standard deviation. It is calculated from the absolute
+errors themselves, not by linearizing the absolute-value function (§13).
+The same formulas
 define the shot pipeline's `shot_primary_mean`, `shot_primary_std`,
 `shot_primary_sem`, `shot_eps_m`, `shot_eps_m_band` over the eight per-seed
 shot intercepts $E^{(s)}_{\text{ZNE,shot}}(n)$, each the degree-one OLS
@@ -473,7 +464,7 @@ intercept of the three recorded `expectation_shot` values against their
 realized $\lambda_r$ (design.md §10, §11; `linear_intercept` in
 `src/zne_scars/zne_runner.py`).
 
-**Assumptions (falsifiable):**
+**Checks:**
 
 - Exactly 8 seeds per step and exactly 3 scale factors per seed (R-6 prints
   the counts).
@@ -501,34 +492,34 @@ confidence interval.
   secondary has flagged steps at $n = 34$–$37$ (`docs/results-minimal.md`
   §6); R-6 prints the recorded flag counts.
 
-### Q7 — Post-hoc combined-arm attenuation rate (exploratory, Tier A; not a verdict)
+### Q7 — Attenuation rate in the existing combined-noise data
 
 Over the masked steps $\mathcal{M}$ of Q3 with $\ell(n) = \ln r(n)$, the
 ordinary least-squares line $\ell(n) \approx a + b\,n$:
 $$ b = \frac{\sum_{n\in\mathcal{M}} (n - \bar n)(\ell(n) - \bar\ell)}{\sum_{n\in\mathcal{M}} (n - \bar n)^2}, \qquad
 g_{12} = -b, \qquad e(n) = \ell(n) - (a + b\,n). $$
 
-This is the outline §4 primary-metric form applied, post hoc, to the recorded
-combined arm $(10^{-3}, 10^{-2})$.
+This applies the estimator in outline §4 to the recorded combined arm
+$(10^{-3}, 10^{-2})$. Because that analysis was not specified before the
+data were collected, it is post-hoc.
 
-Two values are distinguished everywhere:
-the raw fitted rate $\hat g = -b$ exactly as the OLS returns it, and the
-policy-treated rate $g$, obtained by the outline's frozen rule (outline §2):
+The analysis reports two values: the raw fitted rate $\hat g = -b$, and the
+rate $g$ after applying the rule in outline §2:
 $g = 0$ if $\hat g \in [-10^{-9}, 0)$, otherwise $g = \hat g$. A raw
 $\hat g < -10^{-9}$ is not treated; it triggers the "model inadequate —
 anti-attenuation" verdict (outline §4) and no rate is used further. R-7
 prints both $\hat g_{12}$ and $g_{12}$.
 
-**Assumptions (falsifiable):**
+**Checks:**
 
 - The single-exponential-in-$n$ form is the §11 heuristic, which §11 flags
   as not generally valid for interleaved local channels. Residual structure
   is therefore expected to be informative, not noise.
 - No homoscedasticity or independence of residuals is assumed or needed to
   compute the slope.
-- At least 3 masked points.
+- At least three masked points are required.
 
-**Edge cases, pre-declared and implemented in the command in this order:**
+**The command handles failures in this order:**
 
 - With fewer than 3 masked points, R-7 stops with a message and reports no
   rate, before computing any mean or slope. A two-point line is exactly
@@ -536,66 +527,56 @@ prints both $\hat g_{12}$ and $g_{12}$.
 - With any sign flip inside $\mathcal{M}$, R-7 exits with a message naming
   the step and performs no fit.
 
-**Verdict status:** the outline's residual tolerance is not frozen
-(outline §4), so no model adequacy verdict can be issued on this or any arm;
-R-7 prints the residual summary and says so.
+The outline does not yet specify a residual tolerance (outline §4), so this
+calculation cannot pass or fail the model. R-7 prints the residuals without
+classifying them.
 
-The value of $g_{12}$ is left to R-7 rather than asserted here. It is a
-different fitted quantity from the RMS-fitted oracle rates of
-`docs/results-minimal.md` §9 (different objective, different domain, masked
-versus unmasked) and must not be compared to them as if it were the same
-number.
+R-7 calculates $g_{12}$. It is different from the oracle rates in
+`docs/results-minimal.md` §9: the fits use different objectives and domains,
+and Q7 applies a mask while §9 does not. The values should not be compared as
+though they measure the same thing.
 
-### Q8 — Control-arm rates and the additivity residual (Tier B; no data)
+### Q8 — Control-arm rates and additivity
 
 $g_1$ is the Q7 estimator applied to the future $(10^{-3}, 0)$ arm's
 $r_1(n)$, and $g_2$ is the same on the future $(0, 10^{-2})$ arm.
 $\Delta = g_{12} - (g_1 + g_2)$, where every $g$ entering $\Delta$ is the
-policy-treated rate of Q7: a raw $\hat g \in [-10^{-9}, 0)$ becomes 0.
-R-B1 and R-B2 print the raw and the treated value side by side and use only
-the treated one.
+rate after applying Q7's rule: a raw $\hat g \in [-10^{-9}, 0)$ becomes 0.
+R-B1 and R-B2 print both values and use the adjusted value in $\Delta$.
 
 **Assumptions:**
 
 - Each arm passes the outline's adequacy gate (0 < r ≤ 1 + 10⁻⁹ on all
   masked steps).
-- The outline's fit-level anti-attenuation verdict does not fire. Quoted
-  from outline §§2, 4 exactly: a fitted $g_1 < -10^{-9}$ yields "model
-  inadequate — anti-attenuation"; a fitted $g_1 \in [-10^{-9}, 0)$ is
-  treated as 0 (the same frozen policy tolerance as the adequacy gate, same
-  caveats).
+- The fitted rate must not trigger the anti-attenuation rule. Under outline
+  §§2 and 4, $g_1 < -10^{-9}$ is classified as “model inadequate —
+  anti-attenuation,” while $g_1 \in [-10^{-9},0)$ is treated as zero.
 - The same mask on all arms.
-- A residual tolerance frozen before any run.
-- An additivity criterion $|\Delta| \le \tau_{\text{add}}$ frozen before
+- A residual tolerance specified before any run.
+- An additivity criterion $|\Delta| \le \tau_{\text{add}}$ specified before
   either new arm runs (outline §5).
 
 **Edge cases:** if any arm is "model inadequate", whether by
-the pointwise gate, by the fit-level anti-attenuation verdict, or by the
-residual-tolerance branch once a tolerance is frozen, there is no $\Delta$.
-$g_1^{\text{heur}}$ (outline §2) requires the exact $N_1(n)$, which is
-readable today from Q4's operationalization, but its hypothesis intervals
-remain provisional. **Status:** $\tau_{\text{add}}$ is not defined by this
-draft, and neither $g_1$ nor $g_2$ has any input data. No value or outcome is
-predicted.
+the pointwise gate, by the fit-level anti-attenuation rule, or by the
+residual test after its tolerance is set, there is no $\Delta$.
+$g_1^{\text{heur}}$ (outline §2) requires the exact $N_1(n)$, which Q4 can
+calculate from the existing gate counts, but the hypothesis intervals remain
+provisional. This document does not define $\tau_{\text{add}}$, and there are
+no data from which to calculate $g_1$ or $g_2$.
 
-## 5. Recomputation and verification method
+## 5. Commands
 
-Every Tier A command below is a self-contained `.venv/bin/python -c "..."`
-invocation, run from the repository root. Each reads only files under
-`results/minimal/` and writes nothing, so the sealed source identity is
-untouched. All seven were run on 2026-09-06 against baseline
+Run each Tier A command below from the repository root. Each reads files under
+`results/minimal/` and writes nothing. All seven were tested on 2026-09-06
+against baseline
 `1822597ed5e222ac770e0f619d0bfa62e8276c20` with Python 3.12.14 in the pinned
-`.venv`, and each exited 0. Any reader of the released repository can re-run
-them. The stdout of the 2026-09-06 run is kept as internal provenance at
-`.herd/state/task-evidence-20260906/executor/recompute-tierA.log`, which is
-not shipped with the release and not needed to verify anything.
+`.venv`; each exited 0.
 
-Where a command compares a recomputation with a recorded column, it prints
-the maximum absolute deviation. A value at floating-point round-off, of
-order $10^{-16}$ or exactly 0, confirms that the recorded column is the
-stated formula applied to the recorded inputs.
+When a command checks a recorded column, it prints the largest absolute
+difference. A result near floating-point rounding error (about $10^{-16}$),
+or exactly zero, confirms that the column contains the stated calculation.
 
-### R-1 — Q1 (FC-1, FC-4): per-step errors, IF, mask
+### R-1 — Per-step errors, improvement factors, and masks
 
 ```bash
 .venv/bin/python -c "import csv,json; R=list(csv.DictReader(open('results/minimal/steps.csv'))); P=json.load(open('results/minimal/environment.json'))['parameters']; emin=P['eps_min']
@@ -611,7 +592,7 @@ for tag,base,mit,delta in [('dm','e_noisy_dm','zne_primary_mean',P['delta_densit
     print(tag,'rows',len(R),'delta',delta,'eps_min',emin,'max_abs_dev_vs_recorded',d,'reportable_m',rep,'if_wins',wins,'lower_bound_rows',lb)"
 ```
 
-### R-2 — Q2: aggregates vs `metrics.json`
+### R-2 — Aggregate metrics
 
 ```bash
 .venv/bin/python -c "import csv,json,math; R=list(csv.DictReader(open('results/minimal/steps.csv'))); m=json.load(open('results/minimal/metrics.json'))
@@ -619,7 +600,7 @@ ru=math.sqrt(sum(float(r['eps_u'])**2 for r in R)/len(R)); rm=math.sqrt(sum(floa
 print('n_steps',len(R),'rms_u',ru,'rms_m',rm,'gif',ru/rm); print('dev_vs_metrics',ru-m['rms_u'],rm-m['rms_m'],ru/rm-m['gif_value'])"
 ```
 
-### R-3 — Q3 (FC-2): attenuation ratio and log at all 40 steps with mask marker; degenerate-case report
+### R-3 — Attenuation ratio and logarithm for all 40 steps
 
 ```bash
 .venv/bin/python -c "import csv,math; R=list(csv.DictReader(open('results/minimal/steps.csv'))); out=[]
@@ -631,7 +612,7 @@ print('steps',len(out),'masked_in',len(inc),'masked_out',exc); print('sign_flips
 for n,masked,ratio in out: print('n',n,'mask','IN ' if masked else 'OUT','r',ratio,'ln_r',(math.log(ratio) if ratio>0 else 'undefined (r<=0)') if ratio==ratio else 'undefined (E0=0)')"
 ```
 
-### R-4 — Q4 (FC-2): heuristic exposure at all 40 steps from recorded counts and rates
+### R-4 — Estimated exposure from recorded gate counts and error rates
 
 ```bash
 .venv/bin/python -c "import csv,json,math; env=json.load(open('results/minimal/environment.json'))['parameters']['noise']; g1=-math.log(1-env['p1']); g2=-math.log(1-env['p2'])
@@ -645,7 +626,7 @@ for n in sorted(base):
     print('n',n,'N2',N2,'N1',N1,'Gamma',G,'Gamma_per_step',G/n,'exp(-Gamma)',math.exp(-G))"
 ```
 
-### R-5 — Q5 (FC-3): realized and effective scale vs recorded columns
+### R-5 — Realized and effective scale factors
 
 ```bash
 .venv/bin/python -c "import csv,json,math; env=json.load(open('results/minimal/environment.json'))['parameters']['noise']; g1=-math.log(1-env['p1']); g2=-math.log(1-env['p2'])
@@ -659,7 +640,7 @@ for r in F:
 print('rows',len(F),'max_dev_lambda_r',dr,'max_dev_lambda_eff',de,'rows_with_lambda_r_ne_nominal',offgrid,'lambda_eff_le_lambda_r_everywhere',all(float(r['lambda_eff'])<=float(r['lambda_r'])+1e-12 for r in F))"
 ```
 
-### R-6 — Q6 (FC-4): seed-ensemble statistics, both pipelines (shot intercepts reconstructed), and flag counts
+### R-6 — Variation across seeds and fit-status counts
 
 ```bash
 .venv/bin/python -c "import csv,math,statistics as S,numpy as np; st={int(r['n']):r for r in csv.DictReader(open('results/minimal/steps.csv'))}; A=list(csv.DictReader(open('results/minimal/seed_arms.csv'))); by={}
@@ -682,7 +663,7 @@ print('clamp_flag',sum(int(r['clamp_flag']) for r in A),'secondary_avoid_log_fai
 print('shot_secondary_mode_by_step',{n:st[n]['shot_secondary_mode'] for n in st if st[n]['shot_secondary_mode']!='log'},'empty_shot_secondary_estimate',[n for n in st if st[n]['shot_secondary_estimate']==''])"
 ```
 
-### R-7 — Q7 (FC-6, combined arm only): post-hoc OLS rate, raw and policy-treated — exploratory, no verdict
+### R-7 — OLS attenuation rate for the existing combined-noise data
 
 ```bash
 .venv/bin/python -c "import csv,math; R=list(csv.DictReader(open('results/minimal/steps.csv'))); masked=[]
@@ -696,21 +677,20 @@ if flips: raise SystemExit('sign flip inside mask at n=%r: fit not performed'%fl
 pts=[(n,math.log(q)) for n,q in masked]
 mx=sum(p[0] for p in pts)/k; my=sum(p[1] for p in pts)/k
 b=sum((x-mx)*(y-my) for x,y in pts)/sum((x-mx)**2 for x,_ in pts); a=my-b*mx; g12_raw=-b
-g12=0.0 if -1e-9<=g12_raw<0 else g12_raw   # outline s2 frozen policy: raw rate in [-1e-9, 0) treated as 0; raw < -1e-9 would be 'anti-attenuation' (outline s4)
+g12=0.0 if -1e-9<=g12_raw<0 else g12_raw   # rule from outline s2: rates in [-1e-9, 0) become 0; rates below -1e-9 are anti-attenuation
 res=[(x,y-(a+b*x)) for x,y in pts]
 for x,e in res: print('residual n=%d e=%r'%(x,e))
-print('masked_points',k,'g12_raw',g12_raw,'g12_treated',g12,'anti_attenuation_flag',g12_raw<-1e-9,'intercept',a,'max_abs_residual',max(abs(e) for _,e in res),'rms_residual',math.sqrt(sum(e*e for _,e in res)/k),'NOTE: residual tolerance UNFROZEN (prereg outline s4); no verdict')"
+print('masked_points',k,'g12_raw',g12_raw,'g12_treated',g12,'anti_attenuation_flag',g12_raw<-1e-9,'intercept',a,'max_abs_residual',max(abs(e) for _,e in res),'rms_residual',math.sqrt(sum(e*e for _,e in res)/k),'NOTE: no residual tolerance has been set; this command does not classify the fit')"
 ```
 
-### R-B1 — Q3/Q8 on the $p_2 = 0$ arm (FC-5) — **CANNOT BE RUN TODAY**
+### R-B1 — Planned Q3/Q8 command for the $p_2 = 0$ arm (FC-5)
 
-No input exists. The path below does not exist, and only the execution of a
-frozen, reviewed preregistration may create it. The command is written out
-now so that the method is fixed in advance; substitute the future bundle
-path where marked.
+The required data do not exist. Run this command only after the study has an
+approved preregistration and has created a new data bundle. Replace the
+placeholder with that bundle's path.
 
 ```bash
-# NOT RUNNABLE TODAY: results/<p2zero-arm>/steps.csv does not exist (no p2 = 0 arm has been executed).
+# This requires results/<p2zero-arm>/steps.csv, which does not exist yet.
 .venv/bin/python -c "import csv,math; R=list(csv.DictReader(open('results/<p2zero-arm>/steps.csv'))); pts=[]; viol=[]
 for r in R:
     e0=float(r['e0_trotter']); en=float(r['e_noisy_dm'])
@@ -724,23 +704,23 @@ if k<3: raise SystemExit('fewer than 3 masked points (%d): rate not reported'%k)
 mx=sum(p[0] for p in pts)/k; my=sum(p[1] for p in pts)/k
 b=sum((x-mx)*(y-my) for x,y in pts)/sum((x-mx)**2 for x,_ in pts); a=my-b*mx; g1_raw=-b
 if g1_raw<-1e-9: raise SystemExit('model inadequate - anti-attenuation (outline s4): raw g1=%r'%g1_raw)
-g1=0.0 if -1e-9<=g1_raw<0 else g1_raw   # outline s2 frozen policy: raw rate in [-1e-9, 0) is treated as 0
+g1=0.0 if -1e-9<=g1_raw<0 else g1_raw   # rule from outline s2: raw rate in [-1e-9, 0) is treated as 0
 res=[(x,y-(a+b*x)) for x,y in pts]
 for x,e in res: print('residual n=%d e=%r'%(x,e))
-TAU_RES=None  # residual tolerance: NOT FROZEN (outline s4); must be frozen in the full preregistration before any run
+TAU_RES=None  # set this in the approved preregistration before running the experiment
 if TAU_RES is not None and max(abs(e) for _,e in res)>TAU_RES: raise SystemExit('model inadequate - residual tolerance exceeded (outline s4)')
-print('masked_points',k,'g1_raw',g1_raw,'g1_treated',g1,'max_abs_residual',max(abs(e) for _,e in res),'NOTE: residual tolerance (TAU_RES) and H-G/H-L intervals UNFROZEN; no verdict may be issued')"
+print('masked_points',k,'g1_raw',g1_raw,'g1_treated',g1,'max_abs_residual',max(abs(e) for _,e in res),'NOTE: the residual tolerance and H-G/H-L intervals are not final; this command does not issue a result')"
 ```
 
-### R-B2 — Q8 additivity residual (FC-6) — **CANNOT BE RUN TODAY**
+### R-B2 — Planned Q8 additivity command for FC-6
 
-No input exists for two of the three rates. The criterion
-$\tau_{\text{add}}$ is deliberately left undefined here: outline §5 requires
-it to be frozen before either control arm runs, and this draft does not
-freeze it.
+Two of the three rates cannot yet be calculated because the control-arm data
+do not exist. Outline §5 requires the additivity threshold
+$\tau_{\text{add}}$ to be set before either control arm runs, so it remains
+undefined here.
 
 ```bash
-# NOT RUNNABLE TODAY: neither results/<p2zero-arm>/ nor results/<p1zero-arm>/ exists; tau_add is not frozen.
+# This requires both control-arm data sets, which do not exist yet.
 .venv/bin/python -c "import csv,math
 def rate(path):
     pts=[]
@@ -755,75 +735,67 @@ def rate(path):
     mx=sum(p[0] for p in pts)/k; my=sum(p[1] for p in pts)/k
     b=sum((x-mx)*(y-my) for x,y in pts)/sum((x-mx)**2 for x,_ in pts); a=my-b*mx; g_raw=-b
     if g_raw<-1e-9: raise SystemExit('model inadequate - anti-attenuation (outline s4) in %s: raw g=%r'%(path,g_raw))
-    g=0.0 if -1e-9<=g_raw<0 else g_raw   # outline s2 frozen policy: raw rate in [-1e-9, 0) is treated as 0
+    g=0.0 if -1e-9<=g_raw<0 else g_raw   # rule from outline s2: raw rate in [-1e-9, 0) is treated as 0
     res=[(x,y-(a+b*x)) for x,y in pts]
     for x,e in res: print('%s residual n=%d e=%r'%(path,x,e))
     if TAU_RES is not None and max(abs(e) for _,e in res)>TAU_RES: raise SystemExit('model inadequate - residual tolerance exceeded (outline s4) in %s'%path)
     print(path,'g_raw',g_raw,'g_treated',g)
     return g
-TAU_RES=None  # residual tolerance: NOT FROZEN (outline s4)
-TAU_ADD=None  # additivity criterion: NOT FROZEN (outline s5); must be frozen before either control arm runs
+TAU_RES=None  # set in the approved preregistration before any experiment
+TAU_ADD=None  # set in the approved preregistration before either control arm runs
 g12=rate('results/minimal/steps.csv'); g1=rate('results/<p2zero-arm>/steps.csv'); g2=rate('results/<p1zero-arm>/steps.csv')
 D=g12-(g1+g2)
-print('g12',g12,'g1',g1,'g2',g2,'Delta',D,'NOTE: TAU_RES and TAU_ADD NOT FROZEN; no adequacy or additivity verdict may be issued')"
+print('g12',g12,'g1',g1,'g2',g2,'Delta',D,'NOTE: TAU_RES and TAU_ADD have not been set; this command does not classify the result')"
 ```
 
-## 6. Unresolved items
+## 6. Decisions required before Phase 2
 
-Nothing in this draft resolves, freezes, narrows, or reinterprets any of
-the following. They are listed so that a future preregistration knows what
-remains open. Items 1, 2, 4, and 5 are provisional analysis choices that
-such a preregistration would have to freeze before any run. Item 3 is a set
-of policy tolerances that are already frozen and are only reused here. Item
-6 is an unresolved finding on the recorded data, and item 7 is a
-reproduction question that §0 places out of scope.
+Before running Phase 2, the preregistration must settle the hypothesis
+intervals, residual tolerance, additivity rule, and mask threshold described
+below. The $10^{-9}$ rules already come from the outline. The final two items
+are existing questions that Phase 2 will not answer.
 
-1. **The $p_2 = 0$ outline's §2 hypothesis intervals** (H-G: $[0.75, 1.25]$
-   of $g_1^{\text{heur}}$; H-L: $[0, 0.50)$; "neither" otherwise) are
-   provisional and unfrozen; they "must be frozen (with justification) in the
-   full preregistration before any data are seen" (outline §2).
-2. **The outline's §4 residual tolerance** for the $\ln r(n)$ fit is
-   "explicitly not yet a freezable analysis plan". Until it is frozen, no run
-   under the outline can produce a valid H-G/H-L verdict, and Q7's residual
-   summary on the recorded arm is likewise verdict-free.
-3. **The $10^{-9}$ policy tolerances** are frozen policy choices made for
-   determinism, not derived error bounds (outline §4). In the outline's own
-   words: the adequacy gate fires on $r(n) \le 0$ or $r(n) > 1 + 10^{-9}$ on
-   any masked step. The fit-level verdict fires on a fitted $g_1 < -10^{-9}$
-   ("model inadequate — anti-attenuation"), while $g_1 \in [-10^{-9}, 0)$ is
-   treated as 0. This draft reuses these for reporting only, derives nothing
-   from them, and does not redefine, tighten, or move any endpoint.
-4. **The additivity criterion** $\tau_{\text{add}}$ for any factorial
-   apportionment claim must be frozen before either new arm runs
-   (outline §5). This draft names the quantity $\Delta$ and does not freeze
-   the criterion.
+1. **Hypothesis intervals.** Outline §2 proposes H-G as $[0.75, 1.25]$ of
+   $g_1^{\text{heur}}$ and H-L as $[0, 0.50)$, with other values classified as
+   “neither.” These intervals need a justification and final approval before
+   any control-arm data are collected.
+2. **Residual tolerance.** Outline §4 does not yet give a numerical tolerance
+   for the residuals of the $\ln r(n)$ fit. Without one, the residuals can be
+   reported but cannot be used to accept or reject the model.
+3. **The $10^{-9}$ rules.** Outline §4 treats these as fixed policy choices,
+   not calculated error bounds. A masked step fails the adequacy check if
+   $r(n) \le 0$ or $r(n) > 1 + 10^{-9}$. A fitted $g_1 < -10^{-9}$ is
+   classified as anti-attenuation, while $g_1 \in [-10^{-9}, 0)$ is treated as
+   zero. This document uses those endpoints without changing them.
+4. **Additivity.** The preregistration must define
+   $\tau_{\text{add}}$ before either control arm runs (outline §5). This
+   document defines $\Delta$ but does not choose the allowed range.
 5. **The mask threshold** $|E_0| \ge 0.1$ is the outline's provisional
    choice; it is used here for display and diagnostics only.
 6. **The heuristic's $\Gamma_1$ floor arithmetic** remains unresolved on the
    recorded data (`docs/results-minimal.md` §8), and FC-2 does not resolve it.
-7. **The open cross-platform reproduction question** recorded on 2026-09-06 in
-   the dated annotation of `docs/ci-reproduction-assessment.md` is out of
-   scope here and receives no chart, experiment, or diagnosis in this draft.
+7. **Cross-platform reproduction.** The failed Linux comparison recorded in
+   `docs/ci-reproduction-assessment.md` is a separate problem and is not part
+   of this study.
 
-No future verdict is stated, implied, expected, or predicted for any Tier B
-item. About future arms this draft says only what data they would need and
-how the pre-declared gates would be applied.
+The two Tier B calculations cannot be completed until the control experiments
+have been designed, approved, and run.
 
-## 7. Traceability matrix
+## 7. Sources and calculations
 
-| ID | Tier | Quantity | Source file(s) | Exact column(s)/key(s) | Formula ref (section in this doc) | Governing frozen definition (design.md / results-minimal.md section) | Recomputation command ref | Runnable today? (Y/N + why not) |
+| ID | Tier | Quantity | Source file(s) | Exact column(s)/key(s) | Formula in this document | Existing definition | Command | Can run now? |
 |---|---|---|---|---|---|---|---|---|
 | FC-1 | A | Per-step $\mathrm{IF}(n)$ with reportability and lower-bound flags, both pipelines | `results/minimal/steps.csv`; `results/minimal/metrics.json` | `n`, `if_value`, `if_is_lower_bound`, `reportable`, `shot_if_value`, `shot_if_is_lower_bound`, `shot_reportable`; `if_wins`, `reportable_steps_m`, `excluded_steps` (+ `shot_pipeline.*`) | §4 Q1 | design.md §13 (IF, ε_min filter, δ handling, saturation bullet) | R-1 (both pipelines) | Y |
-| FC-2 | A | $r(n)$, $\ln r(n)$ vs heuristic $e^{-\Gamma(n)}$, provisional mask | `results/minimal/steps.csv`; `results/minimal/folded_circuits.csv`; `results/minimal/environment.json` | `n`, `e0_trotter`, `e_noisy_dm`; `n`, `lambda_nominal`, `cx`, `sx`, `x`, `sxdg`; `parameters.noise.p1`, `parameters.noise.p2` | §4 Q3, Q4 | design.md §11 (heuristic, γ_k, Γ_k); results-minimal.md §8 (discrepancy); mask: prereg outline §4 (unfrozen) | R-3 (all 40 steps: $r$, $\ln r$ where defined, mask marker), R-4 (all 40 steps: $N_1$, $N_2$, $\Gamma$, $e^{-\Gamma}$) | Y |
+| FC-2 | A | $r(n)$, $\ln r(n)$ vs heuristic $e^{-\Gamma(n)}$, proposed mask | `results/minimal/steps.csv`; `results/minimal/folded_circuits.csv`; `results/minimal/environment.json` | `n`, `e0_trotter`, `e_noisy_dm`; `n`, `lambda_nominal`, `cx`, `sx`, `x`, `sxdg`; `parameters.noise.p1`, `parameters.noise.p2` | §4 Q3, Q4 | design.md §11 (heuristic, γ_k, Γ_k); results-minimal.md §8 (discrepancy); mask: prereg outline §4 (not final) | R-3 (all 40 steps: $r$, $\ln r$ where defined, mask marker), R-4 (all 40 steps: $N_1$, $N_2$, $\Gamma$, $e^{-\Gamma}$) | Y |
 | FC-3 | A | $\lambda_r - \lambda_{\text{nominal}}$ and $\lambda_{\text{eff}} - \lambda_r$ per (n, seed, λ) | `results/minimal/folded_circuits.csv`; `results/minimal/environment.json` | `n`, `fold_seed`, `lambda_nominal`, `lambda_r`, `lambda_eff`, `cx`, `sx`, `x`, `sxdg`; `parameters.noise.p1`, `parameters.noise.p2` | §4 Q5 | design.md §10 (λ_r, λ_eff, quantization grid); §20 M2-6 (degenerate case) | R-5 | Y |
 | FC-4 | A | Per-seed $\varepsilon^{(s)}_m(n)$, central $\varepsilon_m(n)$, seed-spread band, shot SD/SEM/band (shot intercepts reconstructed) | `results/minimal/seed_arms.csv`; `results/minimal/steps.csv`; `results/minimal/shot_values.csv`; `results/minimal/folded_circuits.csv` | `n`, `fold_seed`, `primary_intercept`; `n`, `e0_trotter`, `eps_m`, `eps_m_band`, `zne_primary_mean`, `zne_primary_std`, `shot_primary_mean`, `shot_primary_std`, `shot_primary_sem`, `shot_eps_m`, `shot_eps_m_band`; `shot_values.csv`: `n`, `fold_seed`, `lambda_nominal`, `expectation_shot`; `folded_circuits.csv`: `n`, `fold_seed`, `lambda_nominal`, `lambda_r` | §4 Q1, Q6 | design.md §13 (uncertainty bullet); results-minimal.md §6 (density-matrix spread is not statistical error; shot spread includes sampling variation; neither a confidence interval) | R-1, R-6 | Y |
-| FC-5 | B | $\ln r_1(n)$ and residuals on the $p_2 = 0$ arm | future `results/<p2zero-arm>/steps.csv` (does not exist); `results/minimal/steps.csv` for the reference $E_0$ | future `n`, `e0_trotter`, `e_noisy_dm`; recorded `e0_trotter` | §4 Q3, Q8 | prereg outline §§3–5 (mask threshold, hypothesis intervals, residual tolerance unfrozen; the $10^{-9}$ gate and anti-attenuation tolerances frozen as policy choices, not derived bounds); design.md §16 bundle format | R-B1 (prints per-step residuals; anti-attenuation branch included; residual-tolerance branch present but inert until a tolerance is frozen) | N: the $(10^{-3}, 0)$ arm has never been executed; no data, no code, no frozen preregistration |
-| FC-6 | B | $g_1, g_2, g_{12}$ and $\Delta = g_{12} - (g_1 + g_2)$ | future `results/<p2zero-arm>/steps.csv` and `results/<p1zero-arm>/steps.csv` (neither exists); `results/minimal/steps.csv` | `n`, `e0_trotter`, `e_noisy_dm` in each | §4 Q7, Q8 | prereg outline §5 (factorial, additivity criterion unfrozen); design.md §11 | R-7 ($g_{12}$ only), R-B2 (per-arm gate, anti-attenuation, and residual branches specified; residual and additivity criteria inert until frozen) | N: two of four factorial cells have no data; $\tau_{\text{add}}$ not frozen |
+| FC-5 | B | $\ln r_1(n)$ and residuals on the $p_2 = 0$ arm | future `results/<p2zero-arm>/steps.csv` (does not exist); `results/minimal/steps.csv` for the reference $E_0$ | future `n`, `e0_trotter`, `e_noisy_dm`; recorded `e0_trotter` | §4 Q3, Q8 | prereg outline §§3–5 (proposed mask, hypothesis intervals, and residual tolerance; fixed $10^{-9}$ policy rules); design.md §16 bundle format | R-B1 (prints each residual and applies the anti-attenuation rule; the residual test remains disabled until its tolerance is set) | N: the $(10^{-3}, 0)$ arm has not been run and the preregistration is incomplete |
+| FC-6 | B | $g_1, g_2, g_{12}$ and $\Delta = g_{12} - (g_1 + g_2)$ | future `results/<p2zero-arm>/steps.csv` and `results/<p1zero-arm>/steps.csv` (neither exists); `results/minimal/steps.csv` | `n`, `e0_trotter`, `e_noisy_dm` in each | §4 Q7, Q8 | prereg outline §5 (factorial design and proposed additivity rule); design.md §11 | R-7 ($g_{12}$ only), R-B2 (checks each arm; the residual and additivity tests remain disabled until their limits are set) | N: the two control arms have no data and $\tau_{\text{add}}$ has not been chosen |
 | Q1 | A | $\varepsilon_u$, $\varepsilon_m$, $\mathrm{IF}$, reportable mask (both pipelines) | `results/minimal/steps.csv`; `results/minimal/environment.json` | `e0_trotter`, `e_noisy_dm`, `zne_primary_mean`, `eps_u`, `eps_m`, `if_value`, `if_is_lower_bound`, `reportable`, `shot_baseline_mean`, `shot_primary_mean`, `shot_eps_u`, `shot_eps_m`, `shot_if_value`, `shot_if_is_lower_bound`, `shot_reportable`; `parameters.eps_min`, `parameters.delta_density_matrix`, `parameters.delta_shot` | §4 Q1 | design.md §13 | R-1 | Y |
 | Q2 | A | $\mathrm{RMS}_u$, $\mathrm{RMS}_m$, $\mathrm{GIF}$ | `results/minimal/steps.csv`; `results/minimal/metrics.json` | `eps_u`, `eps_m`; `rms_u`, `rms_m`, `gif_value`, `gif_is_lower_bound` | §4 Q2 | design.md §13 (all-40-step aggregates) | R-2 | Y |
-| Q3 | A | $r(n)$, $\ell(n) = \ln r(n)$, mask $\mathcal{M}$ | `results/minimal/steps.csv` | `n`, `e0_trotter`, `e_noisy_dm` | §4 Q3 | prereg outline §4 (mask threshold 0.1 provisional and unfrozen; the gate's $10^{-9}$ a frozen policy tolerance, not a derived bound); design.md §13 (E_noisy seed-independent) | R-3 (all 40 steps with mask marker) | Y |
+| Q3 | A | $r(n)$, $\ell(n) = \ln r(n)$, mask $\mathcal{M}$ | `results/minimal/steps.csv` | `n`, `e0_trotter`, `e_noisy_dm` | §4 Q3 | prereg outline §4 (proposed mask threshold 0.1 and fixed $10^{-9}$ policy tolerance); design.md §13 ($E_{\text{noisy}}$ is seed-independent) | R-3 (all 40 steps with mask marker) | Y |
 | Q4 | A | $\gamma_k$, $\Gamma_1(n)$, $\Gamma_2(n)$, $\Gamma(n)$, $e^{-\Gamma(n)}$ | `results/minimal/folded_circuits.csv`; `results/minimal/environment.json` | `n`, `lambda_nominal`, `cx`, `sx`, `x`, `sxdg`; `parameters.noise.p1`, `parameters.noise.p2`, `parameters.noise.one_qubit_gates`, `parameters.noise.two_qubit_gates`, `parameters.noise.clean_gates` | §4 Q4 | design.md §11 (definitions), §8 (noisy gate classes) | R-4 | Y |
 | Q5 | A | $\lambda_r$, $\lambda_{\text{eff}}$ | `results/minimal/folded_circuits.csv`; `results/minimal/environment.json` | `n`, `fold_seed`, `lambda_nominal`, `lambda_r`, `lambda_eff`, `cx`, `sx`, `x`, `sxdg`; `parameters.noise.p1`, `parameters.noise.p2` | §4 Q5 | design.md §10; §20 M2-6 | R-5 | Y |
 | Q6 | A | Seed mean, `ddof=1` SD, SEM, per-seed error band (both pipelines; shot intercepts reconstructed), flag/mode counts | `results/minimal/seed_arms.csv`; `results/minimal/steps.csv`; `results/minimal/shot_values.csv`; `results/minimal/folded_circuits.csv` | `n`, `fold_seed`, `primary_intercept`, `clamp_flag`, `secondary_avoid_log_failed`, `shot_clamp_flag`, `shot_secondary_avoid_log_failed`; `zne_primary_mean`, `zne_primary_std`, `eps_m_band`, `shot_primary_mean`, `shot_primary_std`, `shot_primary_sem`, `shot_eps_m`, `shot_eps_m_band`, `shot_secondary_mode`, `shot_secondary_estimate`; `shot_values.csv`: `n`, `fold_seed`, `lambda_nominal`, `expectation_shot`; `folded_circuits.csv`: `n`, `fold_seed`, `lambda_nominal`, `lambda_r` | §4 Q6 | design.md §13 (uncertainty bullet), §11 (clamp policy), §20 M3-3 (failed-fit policy); results-minimal.md §6 | R-6 | Y |
-| Q7 | A | $g_{12}$ (post-hoc OLS rate on the combined arm), residuals | `results/minimal/steps.csv` | `n`, `e0_trotter`, `e_noisy_dm` | §4 Q7 | prereg outline §4 (estimator form; residual tolerance unfrozen, so no verdict) and §2 (frozen $[-10^{-9}, 0) \to 0$ treatment, applied to the reported rate); design.md §11 (heuristic status) | R-7 (guards: <3 masked points, not reported; sign flip, no fit; prints raw and policy-treated rate, per-step residuals) | Y (as an exploratory diagnostic only; no verdict possible) |
-| Q8 | B | $g_1$, $g_2$, $\Delta$, $\tau_{\text{add}}$ | future `results/<p2zero-arm>/steps.csv`, `results/<p1zero-arm>/steps.csv` (neither exists); `results/minimal/steps.csv` | `n`, `e0_trotter`, `e_noisy_dm` in each | §4 Q8 | prereg outline §§2, 4, 5. Unfrozen: the H-G/H-L/neither hypothesis intervals, the residual tolerance, the additivity criterion $\tau_{\text{add}}$. Frozen as policy choices, not derived bounds: the $10^{-9}$ adequacy-gate tolerance and the $-10^{-9}$ anti-attenuation boundary with its $[-10^{-9}, 0) \to 0$ treatment | R-B1, R-B2 (both print raw and policy-treated rates) | N: no control-arm data exist; criterion not frozen |
+| Q7 | A | $g_{12}$ (post-hoc OLS rate on the combined arm), residuals | `results/minimal/steps.csv` | `n`, `e0_trotter`, `e_noisy_dm` | §4 Q7 | prereg outline §4 (estimator and proposed residual tolerance) and §2 (rates in $[-10^{-9}, 0)$ become zero); design.md §11 | R-7 (requires at least three masked points and no sign flip; prints the raw and adjusted rates and every residual) | Y, for exploration only; no residual limit has been set |
+| Q8 | B | $g_1$, $g_2$, $\Delta$, $\tau_{\text{add}}$ | future `results/<p2zero-arm>/steps.csv`, `results/<p1zero-arm>/steps.csv` (neither exists); `results/minimal/steps.csv` | `n`, `e0_trotter`, `e_noisy_dm` in each | §4 Q8 | prereg outline §§2, 4, 5. The intervals, residual tolerance, and $\tau_{\text{add}}$ are not final. The $10^{-9}$ adequacy and anti-attenuation rules are fixed policy choices rather than error bounds. | R-B1, R-B2 (both print raw and adjusted rates) | N: no control-arm data exist and the additivity rule is not final |
