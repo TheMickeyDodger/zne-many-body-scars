@@ -79,6 +79,8 @@ Cost, qualitatively: the test suite runs in seconds; the experiment in a few min
 
 **Determinism claim** (design.md §16; proven, not asserted): on the same pinned environment, the experiment's six recorded output files are byte-identical across runs — verified across three independent executions (two by the implementer, one by the project lead from a clean state), all sha256-identical. Those executions ran the exact source recorded in the canonical `environment.json` (`source_tree_sha256` `7161d655…`); after the post-recording changes to hashed source (canonical-overwrite guards, the provenance-note wording, and pyproject license metadata — complete history in design.md §20 Phase A), a fresh run's comparison against `results/minimal/` matches byte-for-byte on the five data files while `environment.json` legitimately differs only in the provenance and packaging-tool fields itemized in §4 above — `tools/verify_reproduction.py` checks precisely this, and detects and reports which comparison mode applies. **Exact byte-comparison requires Python 3.12.14 AND the same physical hardware/BLAS build** (design.md §16; the version is recorded in `environment.json`, but machine identity deliberately is not — a reproducer on a different machine of the same platform class passes `--different-hardware` to the verifier for the numerical contract); any other 3.12.x likewise gives numerical reproduction only. Cross-platform, design.md §16 claims only 1e-12 agreement (BLAS reductions differ). Nothing time- or path-dependent enters the recorded outputs. The figure regeneration claim is that figures derive from recorded CSV only; no byte-identity claim is made for image files.
 
+**Release status (annotation dated 2026-09-06).** v0.1.0 is released and archived: GitHub release `v0.1.0` (tag → revision `51f55c1`, published 2026-08-19T03:40:16Z UTC) and Zenodo record 22005535 (version DOI `10.5281/zenodo.22005535`; concept DOI `10.5281/zenodo.22005534`, the one in `CITATION.cff`), with the archive's 22 protected files independently byte-verified against this repository on 2026-09-06. Details, the concept-vs-version DOI and date-basis notes, and one open discrepancy (the published release body still carries the historical DRAFT disclaimer) are in the dated annotation at the top of `docs/release-notes-v0.1.0.md`. Separately, the full-reproduction workflow's first run (2026-09-06, operator-approved) failed the §16 1e-12 cross-platform comparison; that finding is recorded, unresolved and with no claim or tolerance changed, in the dated annotation of `docs/ci-reproduction-assessment.md`.
+
 ## 5. Limitations
 
 Everything measured here binds to: L = 6, the staggered-magnetization density $\langle Z_\pi\rangle/L$, gate-attached two-tier depolarizing noise at p₁ = 10⁻³ / p₂ = 10⁻², two-qubit-restricted seeded random folding, scale factors {1.0, 1.5, 2.0}, and fold seeds 1000–1007. No statement transfers to other sizes, observables, channels, rates, or to hardware (design.md §14(d), §18). In particular, the ExpFactory secondary's 3.4× advantage is a statement about **this simulated noise model** and these data; it is not evidence the exponential ansatz wins elsewhere, and no claim is made about the true functional form of the noise response.
@@ -94,11 +96,12 @@ docs/design.md            pre-registered design + full revision history (§20)
 docs/results-minimal.md   findings of the minimal experiment, traceable to results/
 docs/review-package.md    historical review package for the first-commit decision (dated annotation at top)
 docs/mutation-evidence.md mechanically generated mutation-sensitivity evidence (13 defects)
-docs/release-notes-v0.1.0.md        DRAFT release notes — nothing is released
+docs/release-notes-v0.1.0.md        release notes for the published v0.1.0 (dated post-release annotation at top; historical DRAFT text retained unedited below it)
 docs/reproduction-protocol.md       cold-start reproduction protocol for external researchers
-docs/ci-reproduction-assessment.md  what CI does and does not verify (full-repro workflow: never run)
+docs/ci-reproduction-assessment.md  what CI does and does not verify (full-repro workflow: one operator-approved run on record, 2026-09-06 — verifier FAILED; see its dated annotation)
 docs/prereg-p2zero-outline.md       draft outline for a future control experiment (not executed)
 docs/phase-a-review-package.md      Phase A review package for the v0.1.0 seal decision
+docs/followup-study-draft.md        DRAFT follow-up analysis/chart proposal — not a preregistration, not reviewed for execution, nothing executed
 src/zne_scars/            all physics/statistics modules (importable, side-effect-free)
 tests/                    test suite incl. the pre-registered T1–T6 properties (run pytest for the live count)
 scripts/run_minimal.py    executes design §15 exactly; orchestration only
@@ -108,10 +111,10 @@ tools/verify_reproduction.py tested reproduction verifier (unhashed; the single 
 tools/release_identity.json  sealed v0.1.0 source identity (hash of src/, scripts/, pyproject, requirements)
 results/minimal/          the recorded experiment (deterministic, 6 files)
 figures/                  generated exclusively from results/minimal/
-.github/workflows/        tests.yml (unit suite on push/PR) + full-reproduction.yml (manual; never run)
+.github/workflows/        tests.yml (unit suite on push/PR) + full-reproduction.yml (manual; one operator-approved run on record 2026-09-06, verifier FAILED — see docs/ci-reproduction-assessment.md annotation)
 requirements.txt          pinned environment (pip freeze --exclude-editable)
 pyproject.toml            packaging + pytest configuration
 LICENSE                   Apache-2.0
-CITATION.cff              citation metadata (real DOI added only at release time)
+CITATION.cff              citation metadata (carries the Zenodo concept DOI 10.5281/zenodo.22005534 and date-released 2026-08-18)
 .gitignore                excludes venv/caches and the default reproduction-output directories
 ```
