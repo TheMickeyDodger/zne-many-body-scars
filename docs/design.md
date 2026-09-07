@@ -489,10 +489,55 @@ Phase A (2026-08-18, v0.1.0 release preparation; canonical results frozen, no ne
 | A2-5 | Review round 11 (M3; round 10 was a verbatim replay of round 09, verified by the lead and not routed) found two defects in `tools/verify_reproduction.py` that rounds 2–4 missed, both fixed in unhashed `tools/` (sealed identity `ab751d69…` unchanged). (1) `flatten()` dropped empty dictionaries, so an extra platform key with value `{}` produced no leaf and escaped classification — the A2-4 "leaf-field set must match exactly" guarantee was not fully enforced (lead-reproduced: `platform.bogus_empty = {}` passed). Empty mappings now become sentinel leaves, so container structure and container-vs-leaf type changes are validated recursively, with regression tests on both sides. (2) "same-platform" detection compares recorded Python + platform/BLAS, which identifies the platform CLASS only — the records deliberately contain no machine identity — while §16 scopes byte identity to the SAME hardware, so an honest reproduction on a different machine of the same class would fail byte comparison as a reported discrepancy (false negative). Resolution: the claim is narrowed rather than the records extended (extending them would require hashed-source changes and a new canonical recording): byte identity is documented as a same-hardware claim everywhere (README §4, protocol §4, CI assessment; §16 already said so), and the verifier gains an explicit `--different-hardware` caller declaration switching the data-file contract to the §16 numerical (1e-12) one while keeping all environment rules; without the flag, a byte mismatch that is numerically identical is diagnosed as such with a pointer to the flag, never reported as a bare discrepancy. | §16 unchanged (already same-hardware-scoped); §17 annotation unchanged |
 | A2-6 | Review round 12 found the SIBLING of A2-5's empty-container defect, surviving in the other direction (lead-reproduced): `dict.get()` mapped a missing key and an explicit JSON null both to `None`, so an extra null-valued field — or a required platform field set to null — compared equal to absence and escaped classification entirely (`platform.bogus_null = null` passed). Fixed in unhashed `tools/` (sealed identity unchanged): key MEMBERSHIP is now compared separately from values via a `_MISSING` sentinel, and a null or empty value in a *defined* platform field is rejected as "absence in disguise" rather than classified as a legitimate platform value difference; regression tests cover an extra null field, a required field set to null, and a null-valued package. A hunt for further forms of the same absence/presence conflation found none: the metrics.json comparison validates key sets before values, the CSV comparison validates headers and column counts, mode detection is preceded by a structural type check, and the provenance pair rejects null-bearing pairs as matching no known pair. | tools/ only; §16/§17 unchanged |
 
-Phase 1 (2026-09-06, post-release documentation closure; canonical results frozen, no new scientific runs, no design-text change):
+Phase 1, 2026-09-06: documentation update after the v0.1.0 release. The canonical results stayed frozen, no new scientific runs were made, and the design text did not change.
 
 | Item | Change | Section |
 |---|---|---|
-| P1-1 | Release-status closure, documentation only. v0.1.0 had been published (GitHub release `v0.1.0` → tag revision `51f55c1`; Zenodo record 22005535, version DOI `10.5281/zenodo.22005535`, concept DOI `10.5281/zenodo.22005534` recorded in `CITATION.cff` by revision `1822597`) while several documents still stated in the present tense that nothing was released, archived, or run. Following the repository's history-preservation precedent (`docs/review-package.md`), dated 2026-09-06 annotations were **prepended** — original text retained unedited beneath — to `docs/release-notes-v0.1.0.md` (published state, concept-vs-version DOI, date-basis note, independent 22-file byte verification of the Zenodo archive, and one open discrepancy: the published release body still carries the historical DRAFT disclaimer; remote content untouched), `docs/phase-a-review-package.md` (§9 items 1–4 and 6 since happened; item 5 open), `docs/prereg-p2zero-outline.md` (document published, substance unchanged, nothing frozen), `docs/reproduction-protocol.md` (short pointer), and `docs/ci-reproduction-assessment.md` (see P1-2). `README.md` §7's present-tense layout index was corrected in place and a short release-status block added. `CITATION.cff`, `results/minimal/`, `figures/`, and all hashed source untouched (8/8 sha256 baseline; sealed identity `ab751d69…` unchanged; 116 tests passing locally). | (documentation only; design text unchanged) |
-| P1-2 | First run of `.github/workflows/full-reproduction.yml` on record — operator-approved, not triggered by the closure task: run `34063462240`, `head_sha` `1822597…`, 2026-09-06, `conclusion=failure`. The re-execution on ubuntu-latest (Python 3.12.14, sealed source identity confirmed, identical pins, platform/BLAS values differing as documented) printed the experiment's own rounded §13 headline, but the verifier's off-platform comparison **failed**: `steps.csv` 6 of 1396 values and `seed_arms.csv` 603 of 4156 values beyond the §16 1e-12 tolerance (maxima 1.4657978164578367e-09 and 1.4563966227454372e-08), including density-matrix-derived quantities (`if_value` at $n = 4$; `secondary_avoid_log`), while `shot_values.csv` was byte-identical and `folded_circuits.csv`/`metrics.json` were numerically identical to 1e-12 — so the pre-declared shot-determinism failure mode does not by itself account for it. Recorded in full in the dated annotation of `docs/ci-reproduction-assessment.md` as a real, unresolved, reportable cross-platform finding, exactly as that document's claims ledger anticipated. **§16's cross-platform 1e-12 expectation is now tested and not confirmed by the one run on record; no tolerance is changed, no claim is upgraded in either direction, cause unresolved, no code change made or proposed.** The v0.1.0 verdict on the recorded canonical data and the same-hardware byte-identity claim are unaffected. | §16 text unchanged (expectation status recorded in the CI assessment annotation, not here); design text unchanged |
-| P1-3 | `docs/followup-study-draft.md` added: a **draft, non-executed, non-preregistered** proposal of six charts (four Tier A, recomputable today from the frozen bundle as post-hoc diagnostics; two Tier B, requiring the non-existent $p_2 = 0$ / $p_1 = 0$ control arms), a mathematical analysis contract reusing the frozen §10/§11/§13 definitions by citation, self-contained read-only recomputation commands (Tier A commands executed and logged; Tier B commands explicitly not runnable), and a traceability matrix. It asserts no new result numbers, freezes none of the p₂ = 0 outline's provisional intervals or tolerances, and predicts no outcome. No new scripts, tests, or data files were added anywhere (seal safety). | (new documentation file; design text unchanged) |
+| P1-1 | Documentation brought up to date with the published v0.1.0. Dated 2026-09-06 annotations were added above the original text of five documents, and the README layout index was corrected. | (documentation only; design text unchanged) |
+| P1-2 | First recorded run of `.github/workflows/full-reproduction.yml` (run `34063462240`, operator-approved). The experiment re-executed, but the verifier failed at the §16 1e-12 tolerance. | §16 text unchanged (expectation status recorded in the CI assessment annotation, not here); design text unchanged |
+| P1-3 | `docs/followup-study-draft.md` added: a draft, non-executed, non-preregistered proposal of six charts with recomputation commands and a traceability matrix. | (new documentation file; design text unchanged) |
+
+**P1-1. Documentation updated for the published release.**
+
+When this update was made, v0.1.0 had already been published:
+
+- GitHub release `v0.1.0` at tag revision `51f55c1`.
+- Zenodo record 22005535, version DOI `10.5281/zenodo.22005535`.
+- Concept DOI `10.5281/zenodo.22005534`, recorded in `CITATION.cff` by revision `1822597`.
+
+Several documents still said in the present tense that nothing was released, archived, or run. Following the precedent of `docs/review-package.md`, each received a dated 2026-09-06 annotation above its unedited original text.
+
+- `docs/release-notes-v0.1.0.md` now records the published state, the concept versus version DOI, the date basis, and the independent byte verification of the 22 protected files in the Zenodo archive. It also records one open discrepancy: the published release body still carries the DRAFT disclaimer. Remote content was not touched.
+- `docs/phase-a-review-package.md`: §9 items 1–4 and 6 have since happened; item 5 is open.
+- `docs/prereg-p2zero-outline.md`: the document is published, its substance is unchanged, and nothing is frozen.
+- `docs/reproduction-protocol.md`: a short pointer.
+- `docs/ci-reproduction-assessment.md`: see P1-2.
+- `README.md`: the present-tense layout index in §7 was corrected in place, and a short release-status block was added.
+
+`CITATION.cff`, `results/minimal/`, `figures/`, and all hashed source were left untouched. The 8/8 sha256 values match the baseline, the sealed identity `ab751d69…` is unchanged, and 116 tests pass locally.
+
+**P1-2. The full-reproduction workflow ran for the first time and failed the cross-platform comparison.**
+
+Run `34063462240` of `.github/workflows/full-reproduction.yml` (`head_sha` `1822597…`, 2026-09-06) ended with `conclusion=failure`. The run was operator-approved and was not triggered by the closure task. It ran on ubuntu-latest with Python 3.12.14, the sealed source identity confirmed, identical pins, and platform/BLAS values differing as documented.
+
+The experiment step printed its own rounded §13 headline, but the verifier's off-platform comparison failed:
+
+- `steps.csv`: 6 of 1396 values beyond the §16 1e-12 tolerance, maximum 1.4657978164578367e-09.
+- `seed_arms.csv`: 603 of 4156 values beyond 1e-12, maximum 1.4563966227454372e-08.
+- The failures include density-matrix-derived quantities: `if_value` at $n = 4$ and `secondary_avoid_log`.
+- `shot_values.csv` was byte-identical, and `folded_circuits.csv` and `metrics.json` were numerically identical to 1e-12. The pre-declared shot-determinism failure mode therefore does not by itself account for the result.
+
+The dated annotation in `docs/ci-reproduction-assessment.md` records the run in full as a real, unresolved, reportable cross-platform finding, of the kind that document's claims ledger anticipated. The §16 cross-platform 1e-12 expectation has now been tested once and not confirmed. No tolerance was changed, no claim was upgraded in either direction, the cause is unresolved, and no code change was made or proposed. The v0.1.0 verdict on the recorded canonical data and the same-hardware byte-identity claim are unaffected.
+
+**P1-3. A follow-up study draft was added.**
+
+`docs/followup-study-draft.md` is a draft proposal. It has not been executed and is not preregistered. It contains:
+
+- Six charts. Four are Tier A and can be recomputed today from the frozen bundle as post-hoc diagnostics. Two are Tier B and need the $p_2 = 0$ and $p_1 = 0$ control arms, which do not exist.
+- Definitions and formulas for every quantity, reusing the frozen §10/§11/§13 definitions by citation.
+- Self-contained read-only recomputation commands. The Tier A commands were executed and logged; the Tier B commands cannot run.
+- A traceability matrix.
+
+The draft asserts no new result numbers, freezes none of the p₂ = 0 outline's provisional intervals or tolerances, and predicts no outcome.
+
+No scripts, tests, or data files were added, so the sealed source identity is unchanged.

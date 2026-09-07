@@ -1,23 +1,23 @@
 # Cold-Start Reproduction Protocol
 
-> **[2026-09-06, post-release annotation — read first.]** §0 below says the
-> cross-platform 1e-12 expectation is, "until cross-platform runs are on
-> record", being tested rather than confirmed. One cross-platform run is now on
-> record: an operator-approved run of `.github/workflows/full-reproduction.yml`
-> on 2026-09-06 (run `34063462240`, ubuntu-latest, Python 3.12.14, sealed
-> source identity confirmed, identical pins) re-executed the experiment and
-> **failed the 1e-12 comparison** — values beyond 1e-12 in `steps.csv` and
-> `seed_arms.csv`, including density-matrix-derived quantities, while
-> `shot_values.csv` was byte-identical and `folded_circuits.csv` and
-> `metrics.json` were numerically identical to 1e-12. The full per-file detail,
-> identifiers, and claim status are in the dated annotation at the top of
-> `docs/ci-reproduction-assessment.md`; they are not duplicated here. What
-> this means for you: **the 1e-12 contract below is unchanged**; if your run
-> shows a similar deviation, **report it as a finding (§6) — adjust nothing**,
-> not the tolerance, not the verifier, not the pins; the cause of the observed
-> deviations is **unresolved**. Same-hardware byte identity (Case A) is
-> unaffected by this off-platform result. The entire protocol below is retained
-> unedited.
+> **Post-release annotation, 2026-09-06.** §0 below says the cross-platform
+> 1e-12 expectation is being tested rather than confirmed "until
+> cross-platform runs are on record". One such run now exists. On 2026-09-06
+> an operator-approved run of `.github/workflows/full-reproduction.yml` (run
+> `34063462240`, ubuntu-latest, Python 3.12.14, sealed source identity
+> confirmed, identical pins) re-executed the experiment and failed the 1e-12
+> comparison. Values in `steps.csv` and `seed_arms.csv` were beyond 1e-12,
+> including density-matrix-derived quantities, while `shot_values.csv` was
+> byte-identical and `folded_circuits.csv` and `metrics.json` agreed to
+> 1e-12. The cause is unresolved. The dated annotation at the top of
+> `docs/ci-reproduction-assessment.md` has the per-file detail, identifiers,
+> and claim status.
+>
+> For a reproducer nothing changes: the 1e-12 contract below stands, and if
+> your run shows a similar deviation, report it as a finding under §6 rather
+> than adjusting the tolerance, the verifier, or the pins. Same-hardware byte
+> identity (Case A) is unaffected by this off-platform result. The protocol
+> below is unedited.
 
 For an external researcher with no access to the original machine and no
 knowledge of this project's history. Everything you need is in this repository;
