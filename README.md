@@ -4,6 +4,20 @@ A local, simulation-only study of zero-noise extrapolation (ZNE) applied to quan
 
 ![Canonical minimal experiment showing MFIM scar dynamics and absolute error under zero-noise extrapolation](figures/minimal_experiment.png)
 
+## Project status
+
+*(Annotation dated 2026-09-06; cross-references, not restates, the "Release status" paragraph in §4. The three evidence states below are distinct claims.)*
+
+| Phase | Status |
+|---|---|
+| **Phase 1** — post-release documentation closure (full change record: design.md §20 rows P1-1..P1-3) | **Complete and merged:** [PR 1](https://github.com/TheMickeyDodger/zne-many-body-scars/pull/1), merge commit `1da75c8db312888c50d86da71283f3b7fd095fd4`. |
+| **Phase 2** — follow-up study | **Proposed, not executed, not preregistered.** Chart and mathematics/analysis draft: [`docs/followup-study-draft.md`](docs/followup-study-draft.md) (see its DRAFT banner). No new experimental arm run, no new data. |
+| **Phase 3** | **Deferred.** Nothing executed. |
+
+- **(a) Same-hardware byte identity — holds.** Same pinned environment and physical hardware: six recorded output files byte-identical across three independent executions (design.md §16; "Determinism claim" in §4). Unaffected by (c).
+- **(b) Unit suite — passes.** `Tests` workflow run [34073032105](https://github.com/TheMickeyDodger/zne-many-body-scars/actions/runs/34073032105) on the merge commit: `conclusion=success`; PR 1 records `116 passed` under Python 3.12.14 with pinned dependencies. Command: `.venv/bin/python -m pytest -q` (§4).
+- **(c) Cross-platform 1e-12 comparison — tested once, failed, cause unresolved.** Run [34063462240](https://github.com/TheMickeyDodger/zne-many-body-scars/actions/runs/34063462240), the one on record: verifier `VERDICT: FAIL — 609 problem(s).` — `steps.csv` 6 values and `seed_arms.csv` 603 values beyond the §16 1e-12 tolerance; `shot_values.csv` byte-identical; `folded_circuits.csv` and `metrics.json` numerically identical to 1e-12. The experiment step's own rounded §13 headline `PASS` is not a verifier pass. No tolerance or claim changed; full record: dated annotation in [`docs/ci-reproduction-assessment.md`](docs/ci-reproduction-assessment.md).
+
 ## 1. The question
 
 Does ZNE, applied to a first-order Trotter simulation of quantum many-body scar dynamics in the one-dimensional MFIM, reduce the error of the staggered-magnetization observable $\langle Z_\pi\rangle/L$ relative to the noiseless value of the *same* circuit, under a fully specified local depolarizing noise model in a classical simulator? (design.md §1 — a measurement, pre-registered, with a negative result declared reportable in advance.)
