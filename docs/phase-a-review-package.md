@@ -1,60 +1,45 @@
 # Phase A Review Package — Sealing v0.1.0 (for the human owner)
 
-> **Post-release annotation, 2026-09-06.** This is the 2026-08-18
-> sealing-decision package, kept unedited below this note, tables included,
-> as review history. Its present tense describes the state at that decision,
-> not the repository now. That applies to "Nothing has been committed,
-> tagged, pushed, released, archived, or published by this work" in Purpose,
-> to the remaining decisions in §9 items 1–4, and to the §6 statement that
-> the full-reproduction workflow "has never run".
+> **Update, 2026-09-06.** The original package below records the repository's
+> state on 2026-08-18 and has not been edited. Its statements that the release
+> was unpublished and the full-reproduction workflow had never run are now
+> out of date.
 >
-> What has happened since can be checked at the GitHub release
-> <https://github.com/TheMickeyDodger/zne-many-body-scars/releases/tag/v0.1.0>,
-> the Zenodo record <https://zenodo.org/records/22005535>, and the workflow
-> run <https://github.com/TheMickeyDodger/zne-many-body-scars/actions/runs/34063462240>.
-> The dated annotations at the top of `docs/release-notes-v0.1.0.md` and
-> `docs/ci-reproduction-assessment.md` give the full source lists and the
-> retrieval and comparison commands.
+> Current status:
 >
-> The 2026-09-06 read-only public audit at
-> `.herd/state/task-evidence-20260906/public-audit.md` is internal provenance
-> only: not shipped with the release and not needed to verify any claim.
->
-> - **§9 items 1–4 have happened.** The Phase A work tree was committed as
->   revision `51f55c1bb43f5f6c344c0f6ecaa2d1975aa27526`, and tag `v0.1.0`
->   points to it. The GitHub release `v0.1.0` is published (`published_at`
->   2026-08-19T03:40:16Z, `draft=false`, `prerelease=false`). The Zenodo
->   archive exists as record 22005535, version DOI `10.5281/zenodo.22005535`,
->   concept DOI `10.5281/zenodo.22005534`. The later revision
+> - The Phase A work is commit
+>   `51f55c1bb43f5f6c344c0f6ecaa2d1975aa27526`, and tag `v0.1.0`
+>   points to it. The GitHub release was published at
+>   2026-08-19T03:40:16Z with `draft=false` and `prerelease=false`. The Zenodo
+>   archive is record 22005535, with version DOI
+>   `10.5281/zenodo.22005535` and concept DOI `10.5281/zenodo.22005534`.
+>   Revision
 >   `1822597ed5e222ac770e0f619d0bfa62e8276c20` recorded that concept DOI, with
->   `date-released: 2026-08-18`, in `CITATION.cff`. One discrepancy remains
->   open: the published release body still carries the release notes'
->   historical DRAFT disclaimer (see the release-notes annotation). Remote
->   content was not modified.
-> - **§9 item 5, the copyright-holder question (F8), is still open.** No
->   `LICENSE` or `NOTICE` change has been made.
-> - **§9 item 6 has happened, and the outcome is recorded.** The
->   full-reproduction workflow was first dispatched on 2026-09-06 as an
->   operator-approved run (run `34063462240`, `head_sha` `1822597…`). Setup,
->   install, the unit suite, and the full re-execution succeeded. The
->   verifier step failed (`VERDICT: FAIL — 609 problem(s).`, exit 1): values
->   in `steps.csv` and `seed_arms.csv` were beyond the §16 1e-12
->   cross-platform tolerance, including density-matrix-derived quantities,
->   while `shot_values.csv` was byte-identical and `folded_circuits.csv` and
->   `metrics.json` agreed to 1e-12.
+>   `date-released: 2026-08-18`, in `CITATION.cff`.
+> - The published GitHub release text still contains the old DRAFT
+>   disclaimer. The repository documentation does not change that remote
+>   text.
+> - The copyright-holder question in §9 item 5 remains open. Neither
+>   `LICENSE` nor `NOTICE` has changed.
+> - Full-reproduction run `34063462240` used `head_sha` `1822597…`. Setup,
+>   installation, the tests, and the experiment succeeded. The final
+>   comparison failed with `VERDICT: FAIL — 609 problem(s).` Values in
+>   `steps.csv` and `seed_arms.csv` exceeded the §16 tolerance of 1e-12,
+>   including values derived from the density-matrix pipeline.
+>   `shot_values.csv` was byte-identical, while `folded_circuits.csv` and
+>   `metrics.json` agreed to 1e-12. The cause is unknown. The tolerance and
+>   the v0.1.0 scientific result have not changed.
+> - The eight protected files in `results/minimal/` and `figures/` still
+>   match the baseline byte-for-byte. The pinned test suite still passes all
+>   116 tests.
 >
->   So the §6 "has never run" statement is historical, and the cross-platform
->   1e-12 agreement that §6 says the workflow "tests but has not demonstrated"
->   has now been tested once and not confirmed. The cause is unresolved, no
->   tolerance is changed, no claim is upgraded in either direction, and the
->   v0.1.0 verdict on the recorded canonical data is unaffected. Per-file
->   detail, identifiers, and claim status are in the dated annotation of
->   `docs/ci-reproduction-assessment.md`.
-> - The canonical evidence in `results/minimal/` and `figures/` is still
->   byte-identical to the baseline this package verified (8/8 sha256
->   re-checked 2026-09-06), and the local pinned suite still passes (116).
->
-> Nothing below this line has been edited.
+> Sources: [GitHub release](https://github.com/TheMickeyDodger/zne-many-body-scars/releases/tag/v0.1.0),
+> [Zenodo record](https://zenodo.org/records/22005535), and
+> [workflow run](https://github.com/TheMickeyDodger/zne-many-body-scars/actions/runs/34063462240).
+> See `docs/release-notes-v0.1.0.md` and
+> `docs/ci-reproduction-assessment.md` for detailed checks.
+
+## Original review package from 2026-08-18
 
 **Purpose:** everything needed to decide whether to seal v0.1.0. **Nothing has
 been committed, tagged, pushed, released, archived, or published by this work:
