@@ -1,5 +1,20 @@
 # Preregistration OUTLINE (draft): p₂ = 0 Single-Qubit Attenuation Control
 
+> **[2026-09-06, post-release annotation — read first.]** One clause of the
+> status banner below is now literally stale: "nothing about it is published".
+> This **document** ships inside the published v0.1.0 GitHub release and the
+> Zenodo archive (record 22005535; see the dated annotation at the top of
+> `docs/release-notes-v0.1.0.md`). The **substance** of the banner is
+> unchanged and remains true: no p₂ = 0 experiment has been executed; no
+> preregistration for it has been frozen or approved; no code for it exists in
+> this repository; its §2 hypothesis intervals and its §4 residual tolerance
+> remain **unfrozen and unresolved**, and the 10⁻⁹ policy tolerances remain
+> policy choices, not derived bounds. This annotation resolves, freezes, or
+> narrows nothing. A separate, likewise non-executed draft
+> (`docs/followup-study-draft.md`, 2026-09-06) proposes charts and an analysis
+> contract that reference this outline; it, too, freezes nothing here. The
+> outline below is retained unedited.
+
 > **STATUS: DRAFT OUTLINE FOR FUTURE WORK — NOT AN APPROVED PREREGISTRATION,
 > NOT EXECUTED, AND NOT PART OF THE v0.1.0 EVIDENCE BASE.** As a draft
 > artifact, this outline WAS adversarially reviewed (Phase A M2, review rounds

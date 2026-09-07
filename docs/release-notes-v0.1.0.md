@@ -1,5 +1,92 @@
 # v0.1.0 Release Notes — DRAFT
 
+> **[2026-09-06, post-release annotation — read first.]** The "DRAFT ONLY"
+> banner and the title's "DRAFT" below are **historical**: they were true when
+> this document was written (2026-08-18) and are retained unedited, together
+> with the entire body, as part of the release history. The state has since
+> moved, as follows. Public sources, each independently checkable: the
+> GitHub release page
+> <https://github.com/TheMickeyDodger/zne-many-body-scars/releases/tag/v0.1.0>
+> and its API record
+> <https://api.github.com/repos/TheMickeyDodger/zne-many-body-scars/releases/tags/v0.1.0>;
+> the tag ref
+> <https://api.github.com/repos/TheMickeyDodger/zne-many-body-scars/git/ref/tags/v0.1.0>;
+> the Zenodo record <https://zenodo.org/records/22005535> and its API view
+> <https://zenodo.org/api/records/22005535>; the DOIs
+> <https://doi.org/10.5281/zenodo.22005535> (version) and
+> <https://doi.org/10.5281/zenodo.22005534> (concept). Every fact below is
+> readable from those URLs. *Optional, non-normative internal audit
+> provenance* (Herd working state, not shipped with the released artifact,
+> not needed to verify any claim here): the Supervisor's read-only
+> public-state audit of 2026-09-06,
+> `.herd/state/task-evidence-20260906/public-audit.md`, with raw API responses
+> beside it.
+>
+> - **The release IS published.** GitHub release `v0.1.0`: `draft=false`,
+>   `prerelease=false`, `published_at` `2026-08-19T03:40:16Z` (that is
+>   2026-08-18, 23:40 America/New_York). The tag `v0.1.0` is a lightweight ref
+>   to revision `51f55c1bb43f5f6c344c0f6ecaa2d1975aa27526`. **That tagged
+>   revision is not the current HEAD** (`1822597ed5e222ac770e0f619d0bfa62e8276c20`
+>   at the time of this annotation, which added the Zenodo DOI to
+>   `CITATION.cff` after the tag); the two identities must not be conflated.
+> - **The archive IS published.** Zenodo record `22005535`, version v0.1.0,
+>   **version DOI `10.5281/zenodo.22005535`**; **concept DOI
+>   `10.5281/zenodo.22005534`** (the DOI carried by `CITATION.cff`); Zenodo
+>   `publication_date` 2026-08-19; archive file
+>   `TheMickeyDodger/zne-many-body-scars-v0.1.0.zip`, published checksum
+>   `md5:fcbe8865151f9e22cb6bba36fe7924fc`. The **version DOI** identifies
+>   this specific archived version, while the **concept DOI** identifies the
+>   record across all its versions and resolves to the latest one; citing the
+>   concept DOI is a deliberate choice and is not an error.
+> - **Archive contents were independently byte-verified for this closure.**
+>   As part of the 2026-09-06 audit — not as a claim carried over from
+>   release time — the Supervisor downloaded the published Zenodo zip,
+>   confirmed its public MD5, and compared all 22 protected files (the
+>   canonical 8 in `results/minimal/` and `figures/`, plus `src/`, `scripts/`,
+>   `requirements.txt`, `pyproject.toml`, and `tools/release_identity.json`)
+>   against the repository baseline: **all 22 byte-match**. Anyone can repeat
+>   it from public inputs, from the root of a checkout of tag `v0.1.0` (or of
+>   the current HEAD — these 22 files are identical at both; only
+>   `CITATION.cff` differs):
+>
+>   ```bash
+>   curl -sL -o zne-v0.1.0.zip "https://zenodo.org/api/records/22005535/files/TheMickeyDodger/zne-many-body-scars-v0.1.0.zip/content"
+>   md5 zne-v0.1.0.zip   # expect fcbe8865151f9e22cb6bba36fe7924fc — the checksum published at https://zenodo.org/api/records/22005535
+>   unzip -q zne-v0.1.0.zip -d zenodo-v0.1.0   # top-level directory: TheMickeyDodger-zne-many-body-scars-51f55c1/
+>   for f in results/minimal/environment.json results/minimal/folded_circuits.csv results/minimal/metrics.json results/minimal/seed_arms.csv results/minimal/shot_values.csv results/minimal/steps.csv figures/minimal_experiment.pdf figures/minimal_experiment.png src/zne_scars/__init__.py src/zne_scars/executors.py src/zne_scars/hamiltonian.py src/zne_scars/metrics.py src/zne_scars/noise.py src/zne_scars/observables.py src/zne_scars/trotter.py src/zne_scars/zne_runner.py scripts/_canonical_guard.py scripts/make_figures.py scripts/run_minimal.py requirements.txt pyproject.toml tools/release_identity.json; do cmp -s "$f" "zenodo-v0.1.0/TheMickeyDodger-zne-many-body-scars-51f55c1/$f" && echo "MATCH $f" || echo "DIFF  $f"; done
+>   # expect 22 MATCH lines and no DIFF
+>   ```
+>
+>   The comparison loop was executed on 2026-09-06 against the retrieved zip
+>   and printed 22 MATCH. *Optional, non-normative internal audit provenance*
+>   (Herd working state, not shipped, not needed to verify the claim):
+>   `.herd/state/task-evidence-20260906/zenodo-archive-audit.json` (per-file
+>   SHA-256 values).
+> - **`CITATION.cff` dates vs Zenodo dates are a calendar-basis difference,
+>   not a contradiction.** `CITATION.cff` records `date-released: 2026-08-18`
+>   — the release's calendar date in America/New_York — while GitHub and Zenodo
+>   record 2026-08-19 in UTC; both refer to the same event minutes apart.
+>   `CITATION.cff` is **deliberately left unchanged** by this closure
+>   (metadata and authorship are out of its scope).
+> - **Observed discrepancy, open and unresolved:** the **published GitHub
+>   release body** (visible at the release page and in the `body` field of the
+>   release API record linked above) **still contains this document's
+>   historical DRAFT disclaimer**,
+>   so the remote release text and the current repository text differ. This
+>   is recorded here as an open item for the release owner. This
+>   documentation task did not and will not modify remote content; any change
+>   to the published release text is the release owner's decision.
+> - The operational statements below (test count, wall clock) remain the
+>   dated 2026-08-18 observations they were labeled as. The full-reproduction
+>   workflow, described elsewhere as never run, now has one operator-approved
+>   run on record (2026-09-06,
+>   <https://github.com/TheMickeyDodger/zne-many-body-scars/actions/runs/34063462240>)
+>   whose verifier step **failed**; the dated
+>   annotation at the top of `docs/ci-reproduction-assessment.md` records it
+>   in full, and no claim in these notes is upgraded or changed by it.
+>
+> Nothing below this line has been edited.
+
 > **DRAFT ONLY. No tag, release, or archive exists. This document is a proposal
 > for the release owner; publishing it, and the release itself, require
 > explicit human authorization.**

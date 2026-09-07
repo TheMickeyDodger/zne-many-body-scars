@@ -1,5 +1,59 @@
 # Phase A Review Package — Sealing v0.1.0 (for the human owner)
 
+> **[2026-09-06, post-release annotation — read first.]** This is the
+> historical 2026-08-18 sealing-decision artifact, retained unedited (below
+> this note, tables included) as part of the review history. Its present-tense
+> statements — "Nothing has been committed, tagged, pushed, released, archived,
+> or published by this work" (Purpose), the remaining-decision list of §9
+> items 1–4, and the §6 line that the full-reproduction workflow "has never
+> run" — are present-tense **relative to that sealing decision**, not to the
+> current repository. Since then (public sources: the GitHub release
+> <https://github.com/TheMickeyDodger/zne-many-body-scars/releases/tag/v0.1.0>,
+> the Zenodo record <https://zenodo.org/records/22005535>, and the workflow run
+> <https://github.com/TheMickeyDodger/zne-many-body-scars/actions/runs/34063462240>;
+> the dated annotations at the top of `docs/release-notes-v0.1.0.md` and
+> `docs/ci-reproduction-assessment.md` carry the full source lists and the
+> runnable retrieval and comparison commands; *optional, non-normative internal
+> audit provenance*, not shipped with the released artifact and not needed to
+> verify any claim: the 2026-09-06 read-only public audit,
+> `.herd/state/task-evidence-20260906/public-audit.md`):
+>
+> - **§9 items 1–4 have happened.** The Phase A work tree was committed
+>   (revision `51f55c1bb43f5f6c344c0f6ecaa2d1975aa27526`); tag `v0.1.0` points
+>   to that revision; the GitHub release `v0.1.0` is published
+>   (`published_at` 2026-08-19T03:40:16Z, `draft=false`, `prerelease=false`);
+>   the Zenodo archive exists (record 22005535, version DOI
+>   `10.5281/zenodo.22005535`, concept DOI `10.5281/zenodo.22005534`) and the
+>   concept DOI with `date-released: 2026-08-18` was recorded in
+>   `CITATION.cff` by the later revision `1822597ed5e222ac770e0f619d0bfa62e8276c20`.
+>   One discrepancy is open: the published release body still carries the
+>   release notes' historical DRAFT disclaimer (see the release-notes
+>   annotation); this task did not modify remote content.
+> - **§9 item 5 (copyright-holder question, F8) remains open** — no
+>   `LICENSE`/`NOTICE` change has been made, and this closure makes none.
+> - **§9 item 6 has happened, with a recorded outcome.** The first dispatch
+>   of the full-reproduction workflow took place on 2026-09-06 as an
+>   operator-approved run (run `34063462240`, `head_sha` `1822597…`):
+>   setup, install, unit suite, and the full re-execution succeeded; the
+>   verifier step **failed** (`VERDICT: FAIL — 609 problem(s).`, exit 1) —
+>   values beyond the §16 1e-12 cross-platform tolerance in `steps.csv` and
+>   `seed_arms.csv`, including density-matrix-derived quantities, while
+>   `shot_values.csv` was byte-identical and `folded_circuits.csv` and
+>   `metrics.json` were numerically identical to 1e-12. The §6 "has never
+>   run" statement below is therefore historical. The full per-file detail,
+>   identifiers, and the claim status live in the dated annotation of
+>   `docs/ci-reproduction-assessment.md`; in short, §6's expectation that the
+>   workflow "tests but has not demonstrated" cross-platform 1e-12 agreement
+>   has become **tested and not confirmed** by the one run on record, the
+>   cause is unresolved, no tolerance is changed, and no claim is upgraded in
+>   either direction. The v0.1.0 verdict on the recorded canonical data is not
+>   affected.
+> - The canonical evidence (`results/minimal/`, `figures/`) remains byte-
+>   identical to the baseline this package verified (8/8 sha256 re-checked
+>   2026-09-06), and the local pinned suite still passes (116).
+>
+> Nothing below this line has been edited.
+
 **Purpose:** everything needed to decide whether to seal v0.1.0. **Nothing has
 been committed, tagged, pushed, released, archived, or published by this work:
 the entire Phase A change set exists only in the working tree, and every one of
