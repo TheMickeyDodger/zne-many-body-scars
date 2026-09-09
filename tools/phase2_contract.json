@@ -102,6 +102,67 @@
      "f4_missing_input_preservation": "the pinned weighted fit raised numpy.linalg.LinAlgError on a seed with a missing/non-finite observation (non-finite weights reach lstsq), where the prior body returned an undefined EXP entry. Both pinned_signs and fit_exp_log now skip any (b, n, k, q) whose observations (or sign) are non-finite, leaving that entry nan exactly as before, with every other entry unaffected and nothing non-finite reaching numpy.polyfit. Finite inputs are unchanged and still satisfy the F-1 oracle. Regression with finite control: tests/test_phase2_estimators.py::test_missing_observation_nulls_only_the_affected_exp_entry_and_the_finite_control_is_pinned."
     }
    }
+  },
+  {
+   "id": "A-3",
+   "date": "2026-09-09",
+   "pre_data": true,
+   "pre_data_scope": "approval precedes every contracted Phase 2 analysis: no contracted Phase 2 result exists; the quarantined pilot acquisition (17 of 162 work units, stopped, values unused) and the halted second attempt had already produced raw records under earlier source identities and are not affected",
+   "authority": "human approval recorded 2026-09-09 of Option A with C = 4 as specified in the internal decision brief lead-a3-decision-brief.md (.herd/state/phase2-a3-proposal-20260909/, internal, non-normative); this record and the documents are the public authority",
+   "trigger": "continuous-integration run 34296290167 on main after the PR-4 merge (8810b6e): the numpy.polyfit intercept of y = x/4 (mathematically exactly zero) is -4.965068306494546e-17 on macOS (numpy 2.2.6, Accelerate) and +7.019562571716503e-17 on Linux, so the A-2 rule np.sign(-(a - intercept)) gave opposite signs, opposite estimator branches (log versus avoid_log) and different step aggregates for the same admitted input; the sign(0) = 0 branch was unreachable in floating point",
+   "rules": {
+    "exp_sign_tolerance": "sign = 0 if |intercept - asymptote| <= tau, else np.sign(-(asymptote - intercept)); tau = C * eps * cond(V) * max|y| * lever with V = numpy.vander(lambda_r, 2), lever = 1 + mean(lambda_r)^2 / var(lambda_r) (population variance, ddof = 0), eps = 2.220446049250313e-16, C = 4; computed per fit from the data, never a fixed number; applies in log mode and to the avoid_log initial guess alike (one exp_sign for both modes)"
+   },
+   "derivation": "eps is the unit roundoff of the arithmetic; cond(V) is the least-squares amplification of that roundoff by the degree-1 design matrix polyfit forms; max|y| scales roundoff with the data magnitude; lever is the variance-inflation factor of an intercept extrapolated to lambda = 0 outside the data range; C = 4 sits near the geometric centre of the admissible band C in [1, 16] that keeps the contract's own smallest discriminated magnitude (1e-9) more than 1e4 above tau at nominal scales and tau more than 100x above the observed platform spread 1.198e-16; these are statements about the nominal design and the contract floor, not about the whole admitted domain",
+   "fixture_values": {
+    "x": [
+     1.0,
+     1.25,
+     1.5,
+     1.75,
+     2.0
+    ],
+    "y": "x/4",
+    "asymptote": 0.0,
+    "cond_V": 9.440009,
+    "lever": 19.0,
+    "max_abs_y": 0.5,
+    "tau": 7.965192e-14,
+    "intercept_macos_accelerate_numpy_2_2_6": -4.965068306494546e-17,
+    "intercept_linux_ci": 7.019562571716503e-17,
+    "sign_both_platforms": 0,
+    "headroom_vs_1e-9": 12550,
+    "tau_over_platform_spread": 664.6
+   },
+   "behaviour": "A-3 sets the sign to 0 for ANY intercept whose magnitude is at or below tau, which includes genuinely nonzero intercepts: at nominal contract scales (abscissas 1, 1.25, 1.5, 1.75, 2) that means |intercept - asymptote| <= about 1.6e-13 (7.97e-14 at max|y| = 0.5), and on clustered abscissas tau is far larger. Verified counterexamples: nominal scales, y = x/4 + 1e-14 -> intercept 1.000461e-14, tau 7.965192e-14, A-2 raw sign +1, A-3 sign 0; clustered spread 2e-4 -> intercept -2.9997e-08, tau 1.5988e-02, A-3 sign 0 where A-2 gave a nonzero sign. Because the smallest magnitude the contract itself discriminates is 1e-9, about 6.3e3 above nominal tau, the CONTRACTED discrimination is preserved; that is a statement about the contract's own floor, not a claim that behaviour is unchanged for every nonzero intercept, and the nominal margin does not cover the whole admitted domain. Exact-zero intercepts (y = 0, or y = a exactly) and the y = x/4 fixture give sign 0.",
+   "changed": [
+    "docs/prereg-phase2.md: header record, §4.4 (EXP row and the sign-tolerance paragraph with the constants C = 4 and eps)",
+    "docs/phase2-analysis-contract.md: header record, §C4.3 step 2 and the sign-tolerance paragraph",
+    "tools/phase2_contract.json: this record; phase2b.exp_sign_tolerance (numeric authority); constants C-A3-SIGN-TOL-C and C-A3-EPS; phase2b.extrapolators.EXP",
+    "tools/phase2_contract_check.py: exp_sign_tolerance, exp_sign; A3_SIGN_TOL_C / A3_EPS_DOUBLE bound to the JSON; A-3 fixtures and consistency check; the A-2 y = x/4 fixture now expects sign 0",
+    "phase2/estimators.py: sign_tolerance_factors, exp_sign_tolerance, pinned_signs (fit_exp_log unchanged: sigma = 0 still clamps to exactly a, and the homogeneity rule sends the step to avoid_log with initial guess [0, -1])",
+    "tests/test_phase2_contract.py, tests/test_phase2_estimators.py: the six cross-platform fixtures, the raw-np.sign mutant, and the platform-dependent expectations removed"
+   ],
+   "unchanged": "A-1; every A-2 rule other than the sign zero tolerance (small mask, DM seed range, exact 1/9600, non-finite handling, pinned log-mode fit); the full matrix, controls, charts and outputs; sealed Phase 1, results/minimal/, figures/",
+   "historical_identities_pre_a3": {
+    "docs/prereg-phase2.md": "3fc39fed31bc88fc89fb593fc6d9e3e7a3a4107ceec5d6cd77f730376e2d7ccd",
+    "docs/phase2-analysis-contract.md": "e078c7a5fd93e0bfbde5092f0267cf0e18768a99526cb9cb3734b769a0eda972",
+    "tools/phase2_contract.json": "65e90e438e879d4940e22d25f0cf0e77251754959771355fff9e5585a9e94a7f",
+    "tools/phase2_contract_check.py": "4d794a64b0985beb55fe5530f29e6d15da9a6e6b8d028978b569ecdc000c2c77",
+    "phase2/estimators.py": "062af922d2187f740021b70a6032ea30583328564ac54e4b4f8e255ee69c065c",
+    "tests/test_phase2_contract.py": "676bfc04e86b05599d65a36348ced845e051749f19692aadad1fcea7635a99f9",
+    "tests/test_phase2_estimators.py": "05dd212558cb864fc6950d6bdac8f632ef7eadd7d58f1c272c2943b032153160",
+    "phase2_source_sha256_accepted_a2": "b7937c07302640fd9949c55f3cbddbc5415937caa76e78041021e65bed219f2b",
+    "phase2_source_sha256_history": {
+     "pre_amendment_acquisition_launch": "325ed8b6bfd64a6b1c1ed95242b8e48dda933d6c6eb213af2896c1a058045888",
+     "post_a2_pre_correction": "90d6e11b5056da1a10778e6df2651eb4ccaca46e17c5cecf91eb9173be25e3c8",
+     "round04_candidate": "b84fcec665cfb4e00467368f0a906ee887e70a0411887f6d8fcc584e9e634bf2",
+     "accepted_a2": "b7937c07302640fd9949c55f3cbddbc5415937caa76e78041021e65bed219f2b"
+    },
+    "note": "document and tool identities are those at commit 8810b6e (HEAD when A-3 was implemented)"
+   },
+   "phase2_source_sha256_post_a3": "cb08ee1821d056466d5d509749ab3f1630942895f3eec90f920d443f41458b05",
+   "portability_status": "cross-platform portability is DEMONSTRATED for the two recorded intercepts (-4.965068306494546e-17 macOS, +7.019562571716503e-17 Linux) by emulation on macOS: substituting the recorded Linux value at the pinned-intercept site yields the same sign 0, clamp, avoid_log mode and initial guess. The Linux CI leg has NOT been run; the emulation is not Linux evidence, and bit-for-bit agreement of the avoid_log aggregate on Linux is unestablished."
   }
  ],
  "documents": {
@@ -1511,6 +1572,38 @@
     "doc": "prereg",
     "anchor": "unit inventory "
    }
+  },
+  "C-A3-SIGN-TOL-C": {
+   "symbol": "C (A-3 sign tolerance safety factor)",
+   "value": 4,
+   "units": "dimensionless",
+   "render": "C = 4",
+   "required_in": [
+    "prereg",
+    "contract"
+   ],
+   "where": "safety factor in tau = C * eps * cond(V) * max|y| * lever, the zero tolerance of the EXP sign (amendment A-3, 2026-09-09)",
+   "note": "admissible band C in [1, 16]; 4 chosen near its geometric centre",
+   "definition": {
+    "doc": "prereg",
+    "anchor": "safety factor "
+   }
+  },
+  "C-A3-EPS": {
+   "symbol": "eps (IEEE-754 double machine epsilon)",
+   "value": 2.220446049250313e-16,
+   "units": "dimensionless",
+   "render": "2.220446049250313e-16",
+   "required_in": [
+    "prereg",
+    "contract"
+   ],
+   "where": "unit roundoff in the A-3 sign tolerance",
+   "note": "numpy.finfo(float64).eps",
+   "definition": {
+    "doc": "prereg",
+    "anchor": "machine epsilon $\\epsilon = "
+   }
   }
  },
  "phase2a": {
@@ -1779,7 +1872,7 @@
   "extrapolators": {
    "LIN": "LinearFactory-equivalent degree-1 OLS intercept on realized abscissas lambda_r (primary for every arm)",
    "QUAD": "PolyFactory(order=2)-equivalent degree-2 OLS intercept on lambda_r; Richardson (degree 4 through 5 points) rejected as ill-conditioned; QUAD is the declared 'Richardson or quadratic' option",
-   "EXP": "ExpFactory-equivalent (pinned mitiq v1.0.0: sign from the linear intercept, sqrt-shifted weights in log mode, 1e-6 clamp, avoid_log = scipy curve_fit of a + b exp(c x) from [sign, -1] with RuntimeError as the only failure) with declared asymptote: 0 for ZPI and MLOC (traceless) and for the raw moments <Z_i>, <Z_j>, <Z_i Z_j> (each traceless); 2^-L for PRET. CZZ is never extrapolated directly: all three moments are extrapolated separately (moment-wise) with every extrapolator and CZZ is formed from the extrapolated moments; the same moment-wise rule applies to LIN and QUAD so that CZZ is well defined under all three. Asymptote limitation: the maximally mixed values are facts; convergence to them is an ansatz that holds as a fixed point only for DEP; under DEPH (populations preserved) and AMP (non-unital, fixed point |0...0>) the fixed-asymptote exponential is a shape assumption with no endpoint guarantee and its estimates are labelled 'fixed-asymptote ansatz'. Rank rule (phase2b.rank_rule, C-EXP-MIN-2B; amendment A-1, 2026-09-08): >= 3 distinct realized abscissas everywhere in Phase 2B, else FIT_FAILURE. Sign convention (amendment A-2, 2026-09-08): sign = np.sign(-(asymptote - numpy.polyfit(lambda_r, y, 1)[-1])), zero at equality, in log mode and as the avoid_log initial guess alike; never a '>= 0' ternary and never a closed-form intercept"
+   "EXP": "ExpFactory-equivalent (pinned mitiq v1.0.0: sign from the linear intercept, sqrt-shifted weights in log mode, 1e-6 clamp, avoid_log = scipy curve_fit of a + b exp(c x) from [sign, -1] with RuntimeError as the only failure) with declared asymptote: 0 for ZPI and MLOC (traceless) and for the raw moments <Z_i>, <Z_j>, <Z_i Z_j> (each traceless); 2^-L for PRET. CZZ is never extrapolated directly: all three moments are extrapolated separately (moment-wise) with every extrapolator and CZZ is formed from the extrapolated moments; the same moment-wise rule applies to LIN and QUAD so that CZZ is well defined under all three. Asymptote limitation: the maximally mixed values are facts; convergence to them is an ansatz that holds as a fixed point only for DEP; under DEPH (populations preserved) and AMP (non-unital, fixed point |0...0>) the fixed-asymptote exponential is a shape assumption with no endpoint guarantee and its estimates are labelled 'fixed-asymptote ansatz'. Rank rule (phase2b.rank_rule, C-EXP-MIN-2B; amendment A-1, 2026-09-08): >= 3 distinct realized abscissas everywhere in Phase 2B, else FIT_FAILURE. Sign convention (amendment A-2, 2026-09-08): sign = np.sign(-(asymptote - numpy.polyfit(lambda_r, y, 1)[-1])), zero at equality, in log mode and as the avoid_log initial guess alike; never a '>= 0' ternary and never a closed-form intercept; zero branch (amendment A-3, 2026-09-09): sign = 0 when |intercept - asymptote| <= tau = C * eps * cond(V) * max|y| * lever (phase2b.exp_sign_tolerance, C = 4), so any intercept within the fit's own roundoff bound of the asymptote, including a genuinely nonzero one below tau, is sign 0; portability demonstrated for the recorded platform intercepts by emulation on macOS, the Linux leg not yet run"
   },
   "rank_rule": {
    "LIN": 2,
@@ -10287,6 +10380,28 @@
      "r_target": 0.03,
      "p": "1/48"
     }
+   }
+  },
+  "exp_sign_tolerance": {
+   "C": 4,
+   "eps": 2.220446049250313e-16,
+   "ddof": 0,
+   "formula": "tau = C * eps * cond(V) * max|y| * lever; V = numpy.vander(lambda_r, 2); lever = 1 + mean(lambda_r)^2 / var(lambda_r) (ddof = 0)",
+   "rule": "sign = 0 if |numpy.polyfit(lambda_r, y, 1)[-1] - asymptote| <= tau, else np.sign(-(asymptote - intercept)); one sign for log mode and the avoid_log initial guess",
+   "units": "tau in the units of y; dimensionless factors otherwise",
+   "scope": "every EXP fit in Phase 2B and Phase 2C, both pipelines, recorded counts and every bootstrap replicate; computed per fit",
+   "authority": "amendment A-3 (2026-09-09, human-approved, pre-data): constants C-A3-SIGN-TOL-C (4) and C-A3-EPS bind the value; the checker verifies this object, the constants, prereg §4.4 and contract §C4.3 against its own exp_sign_tolerance",
+   "fixture": {
+    "x": [
+     1.0,
+     1.25,
+     1.5,
+     1.75,
+     2.0
+    ],
+    "y": "x/4",
+    "tau": 7.965192e-14,
+    "sign": 0
    }
   }
  },

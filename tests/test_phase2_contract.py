@@ -589,17 +589,47 @@ def test_a2_exp_sign_exact_zero_five_zero_observations_give_exactly_the_asymptot
 
 
 def test_a2_reviewer_oracle_y_equals_x_over_4_eight_seeds_goes_through_the_clamp_fallback():
+    """A-3 fixture 1: y = x/4 has a mathematically zero intercept. The floating-point intercept is a platform-dependent value
+    of either sign within a few 1e-17 of zero (measured: macOS -4.965068306494546e-17, Linux +7.019562571716503e-17). The
+    requirement: sign 0, clamp, avoid_log, and the SAME step aggregate on both platforms; no platform-specific value. Bit-for-bit
+    agreement of the aggregate on Linux is NOT established here (the Linux leg has not run); this test asserts the rule and the branch."""
     np = pytest.importorskip("numpy")
     ys = [x / 4 for x in _XS5]
     lin = cc.pinned_linear_intercept(_XS5, ys)
     assert lin == float(np.polyfit(np.array(_XS5), np.array(ys), 1)[-1])   # the pinned linear-fit convention
-    assert lin < 0 and abs(lin) < 1e-15                                     # -4.97e-17 on the pinned numpy
-    assert cc.exp_sign(_XS5, ys, 0.0) == -1.0                               # np.sign of the pinned intercept; the '>= 0' ternary said +1
+    tau = cc.exp_sign_tolerance(_XS5, ys)
+    assert abs(lin) <= tau and abs(lin) < 1e-15                              # within tau on this platform
+    assert all(abs(v) <= tau for v in (-4.965068306494546e-17, 7.019562571716503e-17))   # ... and for both measured platform values
+    assert cc.exp_sign(_XS5, ys, 0.0) == 0.0                                # A-3: sign 0 everywhere (the '>= 0' ternary said +1; raw np.sign is platform-dependent)
     v, clamped = cc.exp_fit_fixed(_XS5, ys, 0.0, min_distinct=M2B)
-    assert clamped
+    assert clamped and v == 0.0                                             # sigma = 0 clamps every point; the log-mode limit is exactly the asymptote
     agg, mode, flags = cc.exp_step_aggregate([(_XS5, ys)] * 8, 0.0, min_distinct=M2B)
-    assert mode == "avoid_log" and agg == pytest.approx(0.1353653348, abs=1e-9)
-    assert agg != pytest.approx(0.1325890835, abs=1e-6)                     # the former log-mode value
+    assert mode == "avoid_log" and "CLAMP_RERUN" in flags
+    assert agg == cc.exp_fit_avoid_log(_XS5, ys, 0.0, min_distinct=M2B)     # the avoid_log value from the platform-independent start [0, -1]
+    assert agg != pytest.approx(0.1325890835, abs=1e-6)                     # not the former log-mode value
+
+
+def test_a3_fixture_values_and_margins_are_the_approved_ones():
+    """Independent statement of the approved rule for the failing fixture: tau = C*eps*cond(V)*max|y|*lever with C = 4,
+    cond(V) = 9.440009, lever = 1 + 1.5^2/0.125 = 19, max|y| = 0.5 -> tau = 7.965192e-14. The contract's own smallest discriminated
+    magnitude (1e-9) is > 1e4 above this nominal tau, and tau is > 100x above the observed platform spread 1.198e-16: statements
+    about the nominal design and the contract floor only, not about the whole admitted domain. A-3 sets sign 0 for ANY intercept
+    of magnitude <= tau, including genuinely nonzero ones. tau is computed per fit and scales with the data."""
+    assert cc.exp_sign(_XS5, [x / 4 + 1e-14 for x in _XS5], 0.0) == 0.0             # genuinely nonzero intercept 1.0e-14 <= tau: sign 0 (A-2 raw sign was +1)
+    np = pytest.importorskip("numpy")
+    ys = [x / 4 for x in _XS5]
+    tau = cc.exp_sign_tolerance(_XS5, ys)
+    assert tau == pytest.approx(7.965192e-14, rel=1e-6)
+    assert tau == pytest.approx(4 * 2.220446049250313e-16 * np.linalg.cond(np.vander(np.array(_XS5), 2)) * 0.5 * 19.0, rel=1e-12)
+    assert 1e-9 / tau > 1e4 and tau / 1.198e-16 > 100
+    assert cc.exp_sign_tolerance(_XS5, [10 * y for y in ys]) == pytest.approx(10 * tau, rel=1e-12)          # scales with max|y|
+    assert cc.exp_sign_tolerance([1, 2, 3, 4, 5], ys) != tau                                                # depends on the abscissas
+    assert cc.A3_SIGN_TOL_C == 4 and cc.A3_EPS_DOUBLE == 2.220446049250313e-16
+
+
+def test_a3_offsets_1e9_and_1e12_exceed_tau_and_give_plus_minus_one():
+    for d, expected in ((1e-9, 1.0), (-1e-9, -1.0), (1e-12, 1.0), (-1e-12, -1.0)):
+        assert cc.exp_sign(_XS5, [x / 4 + d for x in _XS5], 0.0) == expected
 
 
 def test_a2_near_zero_and_nonzero_asymptote_follow_np_sign_of_the_pinned_intercept():
@@ -607,9 +637,13 @@ def test_a2_near_zero_and_nonzero_asymptote_follow_np_sign_of_the_pinned_interce
     below = [x / 4 - 1e-9 for x in _XS5]; above = [x / 4 + 1e-9 for x in _XS5]
     assert cc.exp_sign(_XS5, below, 0.0) == -1.0 and cc.exp_sign(_XS5, above, 0.0) == 1.0
     a = 0.25
-    for ys in ([a] * 5, [a + 1e-9 * x for x in _XS5], [a - 1e-9 * x for x in _XS5], [a + 0.9 * math.exp(-0.4 * x) for x in _XS5]):
+    for ys, expected in (([a] * 5, 0.0), ([a + 1e-9 * x for x in _XS5], 0.0), ([a - 1e-9 * x for x in _XS5], 0.0),   # lines through (0, a): intercept a to rounding -> 0
+                         ([a + 1e-9 + 1e-9 * x for x in _XS5], 1.0), ([a - 1e-9 - 1e-9 * x for x in _XS5], -1.0),    # shifted by +/-1e-9 -> +1 / -1
+                         ([a + 0.9 * math.exp(-0.4 * x) for x in _XS5], 1.0)):
         s = cc.exp_sign(_XS5, ys, a)
-        assert s == float(np.sign(-(a - np.polyfit(np.array(_XS5), np.array(ys), 1)[-1])))
+        assert s == expected                                                 # A-3: sign 0 within tau of a, +/-1 beyond it (offsets far above tau)
+        ic = cc.pinned_linear_intercept(_XS5, ys)
+        assert s == (0.0 if abs(ic - a) <= cc.exp_sign_tolerance(_XS5, ys) else float(np.sign(-(a - ic))))
         v, clamped = cc.exp_fit_fixed(_XS5, ys, a, min_distinct=M2B)
         if s == 0.0:
             assert v == a and clamped
@@ -625,7 +659,8 @@ def test_a2_both_exp_modes_use_one_sign_and_the_homogeneity_branch_follows_a_sig
         ys = list(rng.normal(0, 0.3, 5))
         s = cc.exp_sign(_XS5, ys, 0.0)
         assert s in (-1.0, 0.0, 1.0)
-        assert s == float(np.sign(-(0.0 - np.polyfit(np.array(_XS5), np.array(ys), 1)[-1])))
+        ic = float(np.polyfit(np.array(_XS5), np.array(ys), 1)[-1])
+        assert s == (0.0 if abs(ic) <= cc.exp_sign_tolerance(_XS5, ys) else float(np.sign(-(0.0 - ic))))
     clean = ([1.0, 1.5, 2.0], [0.9 * math.exp(-0.4 * x) for x in (1.0, 1.5, 2.0)])
     zero = (_XS5, [0.0] * 5)                                                # sign 0 -> every point clamped
     agg, mode, flags = cc.exp_step_aggregate([clean] * 7 + [zero], 0.0, min_distinct=M2B)
@@ -744,8 +779,10 @@ def test_a2_exact_primary_tail_probability_tolerates_four_undefined_not_five():
 
 # ---- mutants restoring each rejected behaviour -------------------------------------------------
 
-_SIGN_SRC = 'return float(np.sign(-(asymptote - pinned_linear_intercept(xs, ys))))'
-_SIGN_OLD = 'return 1.0 if poly_intercept(xs, ys, 1) - asymptote >= 0 else -1.0  # MUTANT: the rejected ternary on the closed-form intercept'
+_SIGN_SRC = ('    intercept = pinned_linear_intercept(xs, ys)\n    if abs(intercept - asymptote) <= exp_sign_tolerance(xs, ys):\n        return 0.0\n'
+             '    return float(np.sign(-(asymptote - intercept)))   # intercept = pinned_linear_intercept(xs, ys)')
+_SIGN_OLD = '    return 1.0 if poly_intercept(xs, ys, 1) - asymptote >= 0 else -1.0  # MUTANT: the rejected ternary on the closed-form intercept'
+_SIGN_RAW = '    return float(np.sign(-(asymptote - pinned_linear_intercept(xs, ys))))  # MUTANT: A-2 raw np.sign without the A-3 tolerance'
 _GATE_SRC = 'if len(masked) >= k_min and all(r["i_n"] is not None and r["eta_i"] is not None for r in masked):'
 _GATE_OLD = 'if masked and all(r["i_n"] is not None and r["eta_i"] is not None for r in masked):  # MUTANT: non-empty gate'
 _AGG_SRC = '        agg[n] = None if any(seed_value_undefined(v) for v in vals) else sum(vals) / K'
@@ -780,6 +817,41 @@ def test_a2_mutant_ternary_sign_is_caught_by_the_exact_zero_and_oracle_tests(tmp
     msrc = (tmp_path / "mutant_checker.py").read_text(encoding="utf-8")
     assert msrc.count("sigma = exp_sign(xs, ys, asymptote)") == 1 and msrc.count("sign = exp_sign(xs, ys, asymptote)") == 1
     assert "MUTANT: the rejected ternary" in msrc
+
+
+def test_a3_mutant_restoring_raw_np_sign_fails_fixture_1(tmp_path):
+    """A-3 fixture 5: with the tolerance removed, the sign of y = x/4 is the raw floating-point sign, which is nonzero on
+    every platform (and of opposite sign on the two measured ones). Requirement: the mutant does NOT give sign 0 on
+    fixture 1, while the A-3 rule does; the two measured platform intercepts both violate the mutant and both satisfy A-3."""
+    np = pytest.importorskip("numpy")
+    src = CHECKER.read_text(encoding="utf-8"); assert src.count(_SIGN_SRC) == 1
+    mut = _load_mutant_checker(tmp_path, lambda s: s.replace(_SIGN_SRC, _SIGN_RAW, 1))
+    ys = [x / 4 for x in _XS5]
+    assert mut.exp_sign(_XS5, ys, 0.0) != 0.0 and cc.exp_sign(_XS5, ys, 0.0) == 0.0
+    assert mut.exp_sign(_XS5, ys, 0.0) in (-1.0, 1.0)                        # the raw sign is whatever this platform's roundoff gives
+    for v in (-4.965068306494546e-17, 7.019562571716503e-17):                # the measured platform intercepts, as pure numbers
+        assert float(np.sign(-(0.0 - v))) != 0.0                             # raw rule: nonzero (and opposite between the two)
+        assert abs(v) <= cc.exp_sign_tolerance(_XS5, ys)                     # A-3 rule: zero for both
+    with pytest.raises(AssertionError):
+        assert mut.exp_sign(_XS5, ys, 0.0) == 0.0                            # the fixture-1 assertion the mutant fails
+    # unchanged elsewhere: near-zero +/-1e-9 agree between mutant and A-3
+    assert all(mut.exp_sign(_XS5, [x / 4 + d for x in _XS5], 0.0) == cc.exp_sign(_XS5, [x / 4 + d for x in _XS5], 0.0) for d in (1e-9, -1e-9))
+
+
+def test_a3_constants_are_bound_to_the_json(monkeypatch, tmp_path):
+    """The JSON is the numeric authority: drifting the checker's constant, or the JSON's, is rejected by the real-tree check."""
+    monkeypatch.setattr(cc, "A3_SIGN_TOL_C", 5)
+    res = _run_on(ROOT)
+    assert res[next(k for k in res if k.startswith("a3: the sign tolerance is recorded"))][0] is False
+    monkeypatch.undo()
+    root = _copy_tree(tmp_path)
+    _mutate_json(root, lambda d: d["phase2b"]["exp_sign_tolerance"].__setitem__("C", 5))
+    res2 = _run_on(root)
+    assert res2[next(k for k in res2 if k.startswith("a3: the sign tolerance is recorded"))][0] is False
+    root2 = _copy_tree(tmp_path / "b")
+    _mutate_json(root2, lambda d: d["constants"]["C-A3-SIGN-TOL-C"].__setitem__("value", 5))
+    res3 = _run_on(root2)
+    assert any(k.startswith("cross: every numeric constant's render matches") and v[0] is False for k, v in res3.items()) or res3[next(k for k in res3 if k.startswith("a3: the sign tolerance is recorded"))][0] is False
 
 
 def test_a2_mutant_non_empty_mask_gate_is_caught_by_the_value_assertions(tmp_path):
@@ -1978,3 +2050,27 @@ def test_whitespace_check_is_clean_and_accurate_under_live_worker_threads(tmp_pa
                 assert call["returncode"] == GIT_WHITESPACE_RC and "trailing whitespace" in call["stdout"], call
             else:
                 assert call["returncode"] == GIT_CLEAN_RC and call["stdout"] == "", call
+
+
+def test_a3_recorded_linux_intercept_selects_the_same_branch_as_macos(monkeypatch):
+    """Cross-platform emulation without a Linux runtime: substitute the recorded Linux CI intercept of fixture 1
+    (+7.019562571716503e-17) for the local one (-4.965068306494546e-17 on macOS) at the single pinned-intercept site.
+    Requirement: the same sign (0), the same clamp, the same mode (avoid_log) and the same avoid_log initial guess follow,
+    so the only remaining platform dependence is the floating-point arithmetic of scipy's curve_fit, which is the same call
+    with the same inputs on both platforms. This does not replace running the Linux leg; it bounds what the Linux leg tests."""
+    ys = [x / 4 for x in _XS5]
+    local = cc.pinned_linear_intercept(_XS5, ys)
+    agg_local, mode_local, fl_local = cc.exp_step_aggregate([(_XS5, ys)] * 8, 0.0, min_distinct=M2B)
+    real = cc.pinned_linear_intercept
+    monkeypatch.setattr(cc, "pinned_linear_intercept", lambda xs, y: 7.019562571716503e-17 if list(y) == ys else real(xs, y))
+    assert cc.exp_sign(_XS5, ys, 0.0) == 0.0
+    v, clamped = cc.exp_fit_fixed(_XS5, ys, 0.0, min_distinct=M2B)
+    assert clamped and v == 0.0
+    agg_lin, mode_lin, fl_lin = cc.exp_step_aggregate([(_XS5, ys)] * 8, 0.0, min_distinct=M2B)
+    assert (mode_lin, fl_lin) == (mode_local, fl_local) == ("avoid_log", ["CLAMP_RERUN"])
+    assert agg_lin == agg_local                                              # identical curve_fit inputs -> identical value on this machine
+    # platform-independent statement about the two RECORDED constants (never about the host's own intercept): they differ in
+    # sign, both lie within tau, and the host intercept is one of the values the rule must map to 0
+    mac, lin = -4.965068306494546e-17, 7.019562571716503e-17
+    assert mac * lin < 0 and max(abs(mac), abs(lin)) <= cc.exp_sign_tolerance(_XS5, ys)
+    assert abs(local) <= cc.exp_sign_tolerance(_XS5, ys)                       # holds on both recorded platforms

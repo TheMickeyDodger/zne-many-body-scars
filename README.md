@@ -189,7 +189,7 @@ equation and future entrypoint. The numbers below are read from
 - Phase 2B matrix: 150 cells plus 12 conditional controls; 72 cells have status `run`, 72 are `not_run` by design, and 6 hardware-calibration (CAL) cells are `blocked` pending the Phase 2C pre-run calibration snapshot, which needs a second human gate. The run cells total 279,936 simulator executions.
 - Sizes $L \in \{4, 6, 8\}$; noise models DEP, DEPH, AMP, RO and CAL; noise multipliers 0.25, 0.5, 1, 2, 4; nominal scale factors 1, 1.25, 1.5, 1.75, 2; 8 fold seeds; 8192 shots; 48 Trotter steps per cell.
 - Bootstrap replicates: 48,000 for the primary Phase 2B family, 2,000 for exploratory intervals and Phase 2C.
-- The contract JSON, both documents, the checker and the tests carry two amendments (A-1: the Phase 2B exponential fit needs three distinct realized abscissas; A-2: pinned sign convention, small-mask rule, density-matrix seed range) and the A-2 correction, each with the pre- and post-amendment file identities.
+- The contract JSON, both documents, the checker and the tests carry three amendments (A-1: the Phase 2B exponential fit needs three distinct realized abscissas; A-2: pinned sign convention, small-mask rule, density-matrix seed range, with its correction; A-3: a scale-aware zero tolerance for the exponential sign, so that any intercept within the fit's own roundoff bound of the asymptote is sign 0, including genuinely nonzero ones below about 1.6e-13 at nominal scales; portability is demonstrated for the recorded platform intercepts by emulation on macOS, and the Linux run has not yet been performed), each with the pre- and post-amendment file identities.
 
 **How to check it yourself** (from the repository root; the Phase 2 environment
 uses the same pins as `requirements.txt`):
@@ -211,11 +211,14 @@ python3.12 -m venv .venv-phase2
 construction and folding, noise models, exact density-matrix and seeded shot
 simulation, noiseless references, the frozen estimator order including the
 pinned exponential fit and its `avoid_log` fallback, the density-matrix seed
-range, and deterministic bootstrap chunking with checkpoints. The accepted
-source identity of that package is
-`b7937c07302640fd9949c55f3cbddbc5415937caa76e78041021e65bed219f2b`
-(sha256 over `phase2/**/*.py` and `requirements-phase2.txt`, as defined in
-`phase2/identity.py`).
+range, and deterministic bootstrap chunking with checkpoints. The source
+identity of that package (sha256 over `phase2/**/*.py` and
+`requirements-phase2.txt`, as defined in `phase2/identity.py`) is
+`cb08ee1821d056466d5d509749ab3f1630942895f3eec90f920d443f41458b05` after amendment A-3
+(2026-09-09), which made the exponential sign's zero branch reachable (portability
+demonstrated for the recorded intercepts by emulation on macOS; the Linux run
+not yet performed); the A-2 identity `b7937c07…` it supersedes is retained as
+historical in the contract JSON.
 
 **What has not happened, stated plainly.**
 

@@ -25,13 +25,14 @@ spec.loader.exec_module(cc)
 XS = np.array([1.0, 1.25, 1.5, 1.75, 2.0])
 
 
-def test_batched_polyfit_is_not_bit_identical_so_the_scalar_pinned_call_decides_the_sign():
-    # documents why pinned_signs uses the scalar numpy.polyfit call: the multi-column call differs in the last bits
+def test_batched_polyfit_agrees_with_the_scalar_pinned_call_only_to_rounding():
+    # documents why pinned_signs uses the scalar numpy.polyfit call: the multi-column call may differ in the last bits
+    # (it does on macOS/Accelerate and does not on the Linux CI build, so bit-identity is NOT asserted either way)
     rng = np.random.default_rng(0)
     Y = rng.normal(size=(5, 40)); Y[:, 0] = XS / 4
     batched = np.polyfit(XS, Y, 1)[-1]
     scalar = np.array([np.polyfit(XS, Y[:, i], 1)[-1] for i in range(40)])
-    assert not np.array_equal(batched, scalar) and np.abs(batched - scalar).max() < 1e-14
+    assert np.abs(batched - scalar).max() < 1e-14
 
 
 def test_pinned_signs_equal_the_scalar_polyfit_sign_for_every_element_including_zero():
@@ -54,22 +55,22 @@ def test_pinned_signs_equal_the_scalar_polyfit_sign_for_every_element_including_
                     assert (got[b, n, k] == 0.0).all()
                     continue
                 for q in range(5):
-                    ref = float(np.sign(-(a[q] - float(np.polyfit(X[n, k], V[b, n, k, :, q], 1)[-1]))))
-                    assert got[b, n, k, q] == ref, (b, n, k, q)
-                    assert got[b, n, k, q] == cc.exp_sign(list(X[n, k]), list(V[b, n, k, :, q]), float(a[q]))
-    assert (got[:8, 0, 0, 0] == -1.0).all() and (got[8:12, 0, 0, 1] == 0.0).all()
+                    assert got[b, n, k, q] == cc.exp_sign(list(X[n, k]), list(V[b, n, k, :, q]), float(a[q])), (b, n, k, q)
+    assert (got[:8, 0, 0, 0] == 0.0).all() and (got[8:12, 0, 0, 1] == 0.0).all()   # A-3: y = x/4 columns are sign 0 (both recorded platform intercepts lie within tau)
 
 
-# ---- regression oracle: the rejected guard-band hybrid disagrees with the pinned scalar call -----------------
-# Provenance: this case is RECONSTRUCTED by the Executor (2026-09-08) by searching the admitted finite domain
-# (>= 3 distinct finite realized abscissas, finite values); it is NOT the Reviewer's original finite breaking
-# case, which was not recoverable from in-repository evidence. Three distinct realized abscissas clustered within
-# 2e-4 of 1.5, values on the line y = -3e-8 + 0.58 x (ZPI-ranged, asymptote a = 0): the closed-form
-# normal-equation intercept is +3.003e-8 (sign +1), OUTSIDE the old band 1e-8 * (1 + |a| + max|y|) = 1.87e-8,
-# while the scalar numpy.polyfit intercept is -3.000e-8 (sign -1). The rejected hybrid took the closed-form fast
-# path there and returned +1; the corrected implementation and the checker return -1.
-_BREAK_X = np.array([1.5, 1.5001, 1.5002, 1.5, 1.5001])
-_BREAK_Y = np.array([0.8699999699999998, 0.8700579699999998, 0.8701159699999998, 0.8699999699999998, 0.8700579699999998])
+# ---- regression oracle: the rejected guard-band hybrid versus the pinned scalar call under A-3 ----------------------------
+# History. The round-04 fixture (three abscissas clustered within 2e-4 of 1.5, y = -3e-8 + 0.58 x, a = 0) showed the closed-form
+# intercept (+3.003e-8, outside the old band 1.87e-8) disagreeing in SIGN with the scalar numpy.polyfit intercept (-3.000e-8).
+# Under amendment A-3 (2026-09-09) that fixture's intercept lies far inside the scale-aware tolerance (tau ~ 1e-2 there: cond(V)
+# 4.3e4 and lever 3e8), so its sign is 0 by the approved rule; and its degree-2 normal equations are numerically singular on the
+# Linux CI build (cond(A^T A) ~ 3e16), where design() raises LinAlgError. The fixture is therefore re-expressed at spread 3e-3
+# (cond(A^T A) for QUAD ~ 7e12, well inside double precision on every platform) with the same construction: the closed-form
+# intercept (-3.0009e-8) is still OUTSIDE the old band (1.87e-8), so the rejected hybrid takes its closed-form fast path and
+# returns a NONZERO sign, while the A-3 rule returns 0 because |intercept| = 3.0e-8 <= tau = 5.0e-7. Provenance: reconstructed
+# by the implementer, not a reviewer's original case.
+_BREAK_X = np.array([1.5, 1.503, 1.506, 1.5, 1.503])
+_BREAK_Y = np.array([0.8699999699999998, 0.8717399699999998, 0.8734799699999999, 0.8699999699999998, 0.8717399699999998])
 _BREAK_A = 0.0
 _OLD_BAND = 1e-8  # the rejected SIGN_GUARD
 
@@ -123,16 +124,14 @@ def test_pinned_sign_regression_outside_the_rejected_guard_band():
     closed = float(E.intercept_weights(_BREAK_X, 1) @ _BREAK_Y)
     pinned = float(np.polyfit(_BREAK_X, _BREAK_Y, 1)[-1])
     band = _OLD_BAND * (1.0 + abs(_BREAK_A) + np.abs(_BREAK_Y).max())
-    assert abs(closed - _BREAK_A) > band                                          # OUTSIDE the old guard band
-    assert np.sign(closed - _BREAK_A) == 1.0 and np.sign(pinned - _BREAK_A) == -1.0  # the two paths disagree
+    assert abs(closed - _BREAK_A) > band                                          # OUTSIDE the old guard band: the hybrid used the closed form
+    assert abs(pinned - _BREAK_A) <= E.exp_sign_tolerance(_BREAK_X, _BREAK_Y)      # ... but within the A-3 tolerance: the sign is 0
     got = E.pinned_signs(d, V, a)
-    assert (got == -1.0).all()                                                    # the corrected implementation
-    assert cc.exp_sign(list(_BREAK_X), list(_BREAK_Y), _BREAK_A) == -1.0          # the checker's pinned convention
-    assert got[0, 0, 0, 0] == cc.exp_sign(list(_BREAK_X), list(_BREAK_Y), _BREAK_A)
-    # the sign decides the clamp and the mode: both agree with the checker on this case
+    assert (got == 0.0).all()
+    assert cc.exp_sign(list(_BREAK_X), list(_BREAK_Y), _BREAK_A) == 0.0 == got[0, 0, 0, 0]
     val, clamp, sigma = E.fit_exp_log(d, V, got, a)
     ref_val, ref_clamp = cc.exp_fit_fixed(list(_BREAK_X), list(_BREAK_Y), _BREAK_A, min_distinct=3)
-    assert bool(clamp[0, 0, 0, 0]) is ref_clamp is True and sigma[0, 0, 0, 0] == -1.0
+    assert bool(clamp[0, 0, 0, 0]) is ref_clamp is True and val[0, 0, 0, 0] == ref_val == _BREAK_A   # sign 0 clamps to exactly a
 
 
 def test_guard_band_mutant_fails_the_regression_oracle(tmp_path):
@@ -140,49 +139,27 @@ def test_guard_band_mutant_fails_the_regression_oracle(tmp_path):
     d, V, a = _breaking_case_arrays()
     dm = mut.design(_BREAK_X[None, None, :])
     mutant_sign = mut.pinned_signs(dm, V, a)
-    assert (mutant_sign == 1.0).all()                                             # the rejected hybrid: closed-form fast path
-    assert (E.pinned_signs(d, V, a) == -1.0).all()
+    assert (mutant_sign != 0.0).all() and set(mutant_sign.ravel().tolist()) <= {-1.0, 1.0}   # the rejected hybrid: closed-form fast path, nonzero
+    assert (E.pinned_signs(d, V, a) == 0.0).all()
     assert mutant_sign[0, 0, 0, 0] != cc.exp_sign(list(_BREAK_X), list(_BREAK_Y), _BREAK_A)
     with pytest.raises(AssertionError):
-        assert (mutant_sign == -1.0).all()                                        # the oracle assertion the mutant fails
-    # on well-spread abscissas the mutant and the corrected code coincide, so only the clustered case discriminates
+        assert (mutant_sign == 0.0).all()                                         # the oracle assertion the mutant fails
+    # on well-spread abscissas with a clearly nonzero intercept the mutant and the corrected code coincide
     dd = E.design(XS[None, None, :])
-    VV = (XS / 4)[None, None, None, :, None].repeat(5, axis=4)
+    VV = (0.9 * np.exp(-0.4 * XS))[None, None, None, :, None].repeat(5, axis=4)
     assert (mut.pinned_signs(dd, VV, np.zeros(5)) == E.pinned_signs(dd, VV, np.zeros(5))).all()
 
 
-def test_exp_sign_and_log_mode_match_checker_including_sign_zero():
-    d = E.design(XS[None, None, :])
-    cases = [XS / 4, np.zeros(5), 0.9 * np.exp(-0.4 * XS), XS / 4 - 1e-9, XS / 4 + 1e-9, np.array([0.9, 0.6, 0.2, 0.1, 0.05]), np.array([0.1, 0.2, 0.8, 0.9, 0.95])]
-    for a in (0.0, 2.0 ** -6, 0.25):
-        for ys in cases:
-            V = ys[None, None, None, :, None].repeat(5, axis=4)
-            sig = E.pinned_signs(d, V, np.full(5, a))
-            val, clamp, sigma = E.fit_exp_log(d, V, sig, np.full(5, a))
-            ref_sign = cc.exp_sign(list(XS), list(ys), a)
-            assert sigma[0, 0, 0, 0] == ref_sign
-            try:
-                ref_val, ref_cl = cc.exp_fit_fixed(list(XS), list(ys), a, min_distinct=3)
-            except ValueError:
-                pytest.fail("rank failure not expected")
-            assert bool(clamp[0, 0, 0, 0]) == ref_cl
-            # both sides are the same scalar numpy.polyfit weighted call on the same shifted values (A-2 correction,
-            # round 05); the only remaining difference is np.exp versus math.exp on the intercept, hence approx
-            assert val[0, 0, 0, 0] == pytest.approx(ref_val, rel=1e-13, abs=1e-15)
-            if ref_sign == 0.0:
-                assert val[0, 0, 0, 0] == a                              # exactly the asymptote at sign 0
-
-
-# ---- F-1 regression (round 05): the pinned weighted log-mode fit, unclamped, at aggregate level ----------------
-# Reviewer's case (round 05, reproduced by the Lead and the Executor): three distinct realized abscissas clustered
-# within 2e-7 of 1.5, a clean decay y = 0.9 exp(-0.4 x), asymptote 0, eight identical seeds. Every seed passes
-# admission, has sign +1, is NOT clamped and stays in log mode, so no avoid_log fallback rescues the value. The
-# rejected implementation (closed-form weighted normal equations) aggregated to 0.9700957396765513; the pinned
-# weighted numpy.polyfit fit (checker exp_step_aggregate) gives 0.8999999988615335; the generating intercept is 0.9.
-_F1_X = np.array([1.5, 1.5000001, 1.5000002, 1.5, 1.5000001])
+# ---- F-1 regression (round 05): the pinned weighted log-mode fit, unclamped, at aggregate level ----------------------------
+# History. The round-05 reviewer's case (three abscissas clustered within 2e-7 of 1.5, y = 0.9 exp(-0.4 x), asymptote 0, eight
+# identical seeds) had the rejected closed-form implementation aggregate to 0.9700957396765513 against the pinned
+# 0.8999999988615335. Under amendment A-3 that abscissa set has lever ~ 3e14 and cond(V) ~ 4e7, so tau exceeds every value and
+# the sign is 0 by the approved rule: the fit clamps and goes to avoid_log, so log mode is never reached there; and its degree-2
+# normal equations are numerically singular on the Linux CI build (cond(A^T A) ~ 7e17). The requirement is unchanged and is
+# re-expressed at spread 1e-2 (cond(A^T A) for QUAD ~ 6e10; sign +1 under A-3, unclamped, log mode): the implementation's
+# log-mode aggregate must EQUAL the checker's pinned value, and the normal-equation mutant must diverge (4.8e-12 relative here).
+_F1_X = 1.5 + 1e-2 * np.array([0.0, 1.0, 2.0, 0.0, 1.0])
 _F1_Y = 0.9 * np.exp(-0.4 * _F1_X)
-_F1_REJECTED = 0.9700957396765513
-_F1_CHECKER = 0.8999999988615335
 
 _NORMAL_EQUATION_LOG_MUTANT = """
 def fit_exp_log(d, V, sigma, a):
@@ -238,26 +215,26 @@ def test_log_mode_regression_unclamped_clustered_abscissas():
     res = E.aggregate(d, V, 4)
     sig = E.pinned_signs(d, V, np.zeros(5))
     val, clamp, _ = E.fit_exp_log(d, V, sig, np.zeros(5))
-    assert (sig[0, 0, :, 0] == 1.0).all() and not clamp[0, 0, :, 0].any()          # sign +1, UNCLAMPED
+    assert (sig[0, 0, :, 0] == 1.0).all() and not clamp[0, 0, :, 0].any()          # sign +1 under A-3, UNCLAMPED
     assert int(res.exp_mode[0, 0, 0]) == 0                                          # log mode, no fallback
     ref, mode, flags = cc.exp_step_aggregate([(list(_F1_X), list(_F1_Y))] * 8, 0.0, min_distinct=3)
-    assert mode == "log" and flags == [] and ref == _F1_CHECKER
-    assert res.est[0, 0, 3, 0] == ref                                               # aggregate-level agreement, exact
-    assert res.est[0, 0, 3, 0] != pytest.approx(_F1_REJECTED, rel=1e-3)             # the rejected value is gone
-    assert abs(res.est[0, 0, 3, 0] - 0.9) < 2e-9                                    # the generating intercept
+    assert mode == "log" and flags == []
+    assert res.est[0, 0, 3, 0] == ref                                               # aggregate-level agreement with the pinned checker, exact
+    assert abs(res.est[0, 0, 3, 0] - 0.9) < 1e-12                                   # the generating intercept
 
 
 def test_normal_equation_log_mutant_fails_the_f1_aggregate_regression(tmp_path):
     mut = _load_estimators_with_source_mutant(tmp_path, "def fit_exp_log(", "def _ansatz_factory(", _NORMAL_EQUATION_LOG_MUTANT, "estimators_normal_equation_log_mutant")
     dm, V = _f1_arrays(mut)
     res_mut = mut.aggregate(dm, V, 4)
-    assert res_mut.est[0, 0, 3, 0] == _F1_REJECTED                                  # the rejected implementation's value
-    assert int(res_mut.exp_mode[0, 0, 0]) == 0                                      # still log mode, still unclamped
     d, V2 = _f1_arrays(E)
-    assert E.aggregate(d, V2, 4).est[0, 0, 3, 0] == _F1_CHECKER
+    ref = cc.exp_step_aggregate([(list(_F1_X), list(_F1_Y))] * 8, 0.0, min_distinct=3)[0]
+    assert E.aggregate(d, V2, 4).est[0, 0, 3, 0] == ref
+    assert int(res_mut.exp_mode[0, 0, 0]) == 0                                      # the mutant also runs log mode here
+    assert res_mut.est[0, 0, 3, 0] != ref and abs(res_mut.est[0, 0, 3, 0] - ref) > 1e-13   # the normal-equation value differs (4.8e-12 relative)
     with pytest.raises(AssertionError):
-        assert res_mut.est[0, 0, 3, 0] == _F1_CHECKER                               # the oracle assertion the mutant fails
-    # on well-spread abscissas the two fits agree to rounding, so only the clustered case discriminates
+        assert res_mut.est[0, 0, 3, 0] == ref                                       # the oracle assertion the mutant fails
+    # on the nominal contract abscissas the two fits agree to rounding, so only the narrowed spread discriminates
     dd = E.design(np.tile(XS, (1, 8, 1))); VV = np.tile((0.9 * np.exp(-0.4 * XS))[None, None, None, :, None], (1, 1, 8, 1, 5))
     assert mut.aggregate(dd, VV, 4).est[0, 0, 3, 0] == pytest.approx(E.aggregate(dd, VV, 4).est[0, 0, 3, 0], rel=1e-10)
 
@@ -301,7 +278,8 @@ def test_avoid_log_matches_checker_with_the_same_sign():
         got = E.exp_avoid_log_one(XS, ys, 0.0, s)
         ref = cc.exp_fit_avoid_log(list(XS), list(ys), 0.0, min_distinct=3)
         assert got == pytest.approx(ref, abs=1e-10)
-    assert E.exp_avoid_log_one(XS, XS / 4, 0.0, cc.exp_sign(list(XS), list(XS / 4), 0.0)) == pytest.approx(0.1353653348, abs=1e-9)
+    s0 = cc.exp_sign(list(XS), list(XS / 4), 0.0); assert s0 == 0.0                                       # A-3 fixture 1
+    assert E.exp_avoid_log_one(XS, XS / 4, 0.0, s0) == cc.exp_fit_avoid_log(list(XS), list(XS / 4), 0.0, min_distinct=3)
 
 
 def test_aggregate_matches_checker_step_aggregate_on_random_and_oracle_seeds():
@@ -310,7 +288,7 @@ def test_aggregate_matches_checker_step_aggregate_on_random_and_oracle_seeds():
     X = np.tile(XS, (2, 8, 1))
     d = E.design(X)
     V = rng.uniform(-0.5, 0.9, size=(6, 2, 8, 5, 5))
-    V[0, 0, :, :, 0] = XS / 4                                            # reviewer oracle: 8 identical seeds -> avoid_log 0.1353653348
+    V[0, 0, :, :, 0] = XS / 4                                            # A-3 fixture 1: 8 identical seeds -> sign 0 -> avoid_log
     V[1, 0, 3, :, 1] = 2.0 ** -L                                         # one seed exactly at the asymptote (raw = 0 -> clamp) among clean decays for PRET
     V[1, 0, [0, 1, 2, 4, 5, 6, 7], :, 1] = 2.0 ** -L + 0.9 * np.exp(-0.4 * XS)
     res = E.aggregate(d, V, L)
@@ -333,8 +311,9 @@ def test_aggregate_matches_checker_step_aggregate_on_random_and_oracle_seeds():
                         assert np.isnan(res.est[b, n, 3, 1])
                     else:
                         assert res.est[b, n, 3, 1] == pytest.approx(ref, abs=1e-9)
-    assert res.est[0, 0, 3, 0] == pytest.approx(0.1353653348, abs=1e-9)
-    assert int(res.exp_mode[1, 0, 1]) == 1                               # the sign-0 seed forced avoid_log for the whole step
+    ref0 = cc.exp_step_aggregate([(list(X[0, k]), list(V[0, 0, k, :, 0])) for k in range(8)], 0.0, min_distinct=3)
+    assert ref0[1] == "avoid_log" and res.est[0, 0, 3, 0] == ref0[0]     # A-3 fixture 1 through the whole frozen order, equal to the checker
+    assert int(res.exp_mode[0, 0, 0]) == 1 and int(res.exp_mode[1, 0, 1]) == 1   # the sign-0 seeds forced avoid_log for the whole step
 
 
 def test_lin_quad_and_none_match_checker():
@@ -414,3 +393,28 @@ def test_dm_seed_range_non_finite_seed_values_null_the_whole_range_in_both_imple
     r = E.dm_seed_range(fixtures["inf_outside_window"], pts, +1.0)
     assert r["matched_n"] == 19 and r["amp_range"] == (1.0, 1.0) and r["timing_range"] == (19.0, 19.0)
     assert cc.dm_seed_range(_as_checker_curves(fixtures["inf_outside_window"], pts), pts, +1.0) == r
+
+
+# ---- amendment A-3 (2026-09-09): portable zero branch of the EXP sign --------------------------------------------------
+
+def test_a3_tolerance_matches_the_checker_and_fixture_1_is_sign_zero_through_the_frozen_order():
+    for ys in (XS / 4, np.zeros(5), 10 * XS / 4, np.array([0.9, 0.6, 0.2, 0.1, 0.05])):
+        assert E.exp_sign_tolerance(XS, ys) == pytest.approx(cc.exp_sign_tolerance(list(XS), list(ys)), rel=1e-15)
+    assert E.exp_sign_tolerance(XS, XS / 4) == pytest.approx(7.965192e-14, rel=1e-6)
+    d = E.design(XS[None, None, :])
+    for ys, expected in ((XS / 4, 0.0), (np.zeros(5), 0.0), (XS / 4 + 1e-9, 1.0), (XS / 4 - 1e-9, -1.0), (XS / 4 + 1e-12, 1.0), (XS / 4 - 1e-12, -1.0)):
+        V = ys[None, None, None, :, None].repeat(5, axis=4)
+        assert (E.pinned_signs(d, V, np.zeros(5))[0, 0, 0] == expected).all(), ys
+
+
+def test_a3_mutant_restoring_raw_np_sign_in_pinned_signs_fails_fixture_1(tmp_path):
+    src = (ROOT / "phase2" / "estimators.py").read_text(encoding="utf-8")
+    old = "                    sign[b, n, k, q] = 0.0 if abs(intercept - a[q]) <= tau else np.sign(-(a[q] - intercept))"
+    assert src.count(old) == 1
+    mut = _load_estimators_with_source_mutant(tmp_path, old, "    return sign", "                    sign[b, n, k, q] = np.sign(-(a[q] - intercept))   # MUTANT: raw np.sign, no A-3 tolerance\n", "estimators_raw_sign_mutant")
+    d = mut.design(XS[None, None, :]); V = (XS / 4)[None, None, None, :, None].repeat(5, axis=4)
+    got = mut.pinned_signs(d, V, np.zeros(5))[0, 0, 0]
+    assert (got != 0.0).all() and set(got.tolist()) <= {-1.0, 1.0}          # raw sign: nonzero, platform-dependent
+    assert (E.pinned_signs(E.design(XS[None, None, :]), V, np.zeros(5))[0, 0, 0] == 0.0).all()
+    with pytest.raises(AssertionError):
+        assert (got == 0.0).all()
