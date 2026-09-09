@@ -17,7 +17,10 @@ them and as the checker's `poly_intercept` also computes them.
 Rank rule (amendment A-1): LIN >= 2, QUAD >= 3, EXP >= 3 distinct realized abscissas.
 EXP sign (amendment A-2): np.sign(-(a - numpy.polyfit(x, y, 1)[-1])), zero at equality, in both
 modes, decided by the scalar pinned call for every element; the pinned mitiq v1.0.0 convention,
-never a '>= 0' ternary and never a closed-form intercept.
+never a '>= 0' ternary and never a closed-form intercept. Amendment A-3 (2026-09-09) makes the
+zero branch reachable: sign = 0 when |intercept - a| <= tau = C*eps*cond(V)*max|y|*lever (C = 4),
+computed per fit, for ANY intercept at or below tau including genuinely nonzero ones; the sign feeds
+the clamp in fit_exp_log and the avoid_log initial guess.
 DM companion seed range (amendment A-2): `dm_seed_range` below; every non-finite required seed
 value (NaN, +inf, -inf, missing) is undefined and nulls the whole affected range.
 """
@@ -98,28 +101,49 @@ def fit_lin_quad(d: CellDesign, V: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     return lin, quad
 
 
+A3_SIGN_TOL_C = 4                        # amendment A-3 (2026-09-09): safety factor of the sign zero tolerance
+A3_EPS_DOUBLE = 2.220446049250313e-16   # IEEE-754 double machine epsilon
+
+
+def sign_tolerance_factors(x: np.ndarray) -> float:
+    """cond(numpy.vander(x, 2)) * lever, lever = 1 + mean(x)^2 / var(x) with population variance (ddof=0); the data-independent
+    part of the A-3 tolerance for one abscissa set."""
+    x = np.asarray(x, float)
+    cond = float(np.linalg.cond(np.vander(x, 2)))
+    lever = 1.0 + float(np.mean(x)) ** 2 / float(np.var(x))
+    return cond * lever
+
+
+def exp_sign_tolerance(x: np.ndarray, y: np.ndarray) -> float:
+    """Amendment A-3: tau = C * eps * cond(V) * max|y| * lever, computed per fit (never a constant)."""
+    return A3_SIGN_TOL_C * A3_EPS_DOUBLE * sign_tolerance_factors(x) * float(np.max(np.abs(np.asarray(y, float))))
+
+
 def pinned_signs(d: CellDesign, V: np.ndarray, a: np.ndarray) -> np.ndarray:
-    """EXP sign for every (b, n, k, q): np.sign(-(a - numpy.polyfit(x, y, 1)[-1])) with the SCALAR pinned
-    call for EVERY element (amendment A-2, corrected 2026-09-08). There is no closed-form fast path and no
-    guard band: the closed-form (normal-equation) intercept and the scalar polyfit intercept are not
-    equivalent over the admitted finite domain (they disagree in sign on clustered realized abscissas;
-    tests/test_phase2_estimators.py::test_pinned_sign_regression_outside_the_rejected_guard_band), and a
-    batched multi-column polyfit is not bit-identical to the scalar call. np.sign(0) = 0, matching
-    tools/phase2_contract_check.py::exp_sign. Rank-failed (n, k) get sign 0 and are nulled downstream."""
+    """EXP sign for every (b, n, k, q) from the SCALAR pinned numpy.polyfit(x, y, 1)[-1] call (amendment A-2, corrected
+    2026-09-08: no closed-form fast path, no guard band), with the zero branch made reachable by amendment A-3 (2026-09-09):
+    sign = 0 when |intercept - a| <= tau = C * eps * cond(V) * max|y| * lever, else np.sign(-(a - intercept)). tau is computed
+    per element from the data (the cond(V) * lever factor once per abscissa set); it is never a fixed number. Matches
+    tools/phase2_contract_check.py::exp_sign. A missing/non-finite observation leaves that seed's sign undefined (nan);
+    rank-failed (n, k) get sign 0 and are nulled downstream."""
     B, N, K, J, Q = V.shape
     sign = np.zeros((B, N, K, Q))
-    finite = np.isfinite(V).all(axis=3)                            # [b,n,k,q]; a missing/non-finite observation
-    for n in range(N):                                             # leaves that seed's sign (and fit) undefined
+    finite = np.isfinite(V).all(axis=3)                            # [b,n,k,q]
+    for n in range(N):
         for k in range(K):
             if not d.ok_exp[n, k]:
                 continue
             x = d.X[n, k]
+            factors = sign_tolerance_factors(x)
             for b in range(B):
                 for q in range(Q):
                     if not finite[b, n, k, q]:
                         sign[b, n, k, q] = np.nan
                         continue
-                    sign[b, n, k, q] = np.sign(-(a[q] - float(np.polyfit(x, V[b, n, k, :, q], 1)[-1])))
+                    y = V[b, n, k, :, q]
+                    intercept = float(np.polyfit(x, y, 1)[-1])
+                    tau = A3_SIGN_TOL_C * A3_EPS_DOUBLE * factors * float(np.max(np.abs(y)))
+                    sign[b, n, k, q] = 0.0 if abs(intercept - a[q]) <= tau else np.sign(-(a[q] - intercept))
     return sign
 
 
@@ -130,7 +154,8 @@ def fit_exp_log(d: CellDesign, V: np.ndarray, sigma: np.ndarray, a: np.ndarray):
     The closed-form weighted normal equations were removed (A-2 correction, round 05, 2026-09-08): they are not the
     pinned estimator and on clustered abscissas they give a different unclamped log-mode value
     (tests/test_phase2_estimators.py::test_log_mode_regression_unclamped_clustered_abscissas).
-    `sigma` from pinned_signs (0 at equality: every point clamps and the value is exactly a).
+    `sigma` from pinned_signs (0 at equality within the A-3 tolerance: every point clamps, the value is exactly a, and
+    the homogeneity rule sends the step to avoid_log with initial guess [0, -1]).
     Returns (intercept[b,n,k,q], clamp[b,n,k,q] bool, sigma[b,n,k,q]); nan where EXP rank fails."""
     B, N, K, J, Q = V.shape
     raw = sigma[..., None, :] * (V - a)                            # [b,n,k,j,q]

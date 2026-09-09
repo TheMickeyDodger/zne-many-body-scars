@@ -9,7 +9,7 @@ submitted or prepared. The first gate is document review, not execution.
 
 **Status update, 2026-09-08 (A-1). HISTORICAL: written before A-2 and the pilot acquisition; every "no Phase 2 data" statement in this paragraph was true on its date and is superseded by the current-status paragraph that follows. Original wording kept.** Amendment A-1 (below) is human-approved and pre-data. A fresh canonical read-only review of the amended artifacts is pending; implementation and the measured feasibility pilot resume only after that approval. What exists today: the offline Phase 2 environment `.venv-phase2` (pins in `requirements-phase2.txt`, identical to `requirements.txt`) and unexecuted scaffolding under `phase2/` (identity, contract access and observable-weight modules; no simulator, estimator or bootstrap code has run). No Phase 2 scientific execution of any kind has taken place: no `results/phase2*` bundle, no `figures-phase2*` root, no Aer execution, no fit, no bootstrap; `results/minimal/` is byte-identical to the baseline. No IBM workload has been submitted or prepared.
 
-**Current status (2026-09-08, after A-2 and its correction; supersedes the paragraph above).** No CONTRACTED Phase 2 scientific result exists: no contracted `results/phase2*` bundle, no `figures-phase2*` root, no bootstrap, and `results/minimal/` is byte-identical to the baseline. Real Phase 2 execution HAS occurred outside any contracted result: Aer timing, method-selection and seed-determinism probes (evidence `1b-01`), and a separately labelled pilot acquisition `results/phase2-pilot` that executed Aer and produced folded circuits, raw density-matrix values and raw shot records for 17 completed of 162 work units under the pre-A-2 `phase2` source before it was stopped; it is quarantined, identity-mismatched with the current source, and its values are never used. `phase2/` holds estimator, simulation and pilot code that has run in tests and in that pilot. No IBM workload has been submitted or prepared. The corrected A-2 candidate was ACCEPTED on 2026-09-08 (independent review round 06 approved it; accepted `phase2` source identity `b7937c07302640fd9949c55f3cbddbc5415937caa76e78041021e65bed219f2b`). Feasibility of the full matrix is unassessed, and the during-run monitoring method carries a documented production NO-GO.
+**Current status (2026-09-08, after A-2 and its correction; supersedes the paragraph above).** No CONTRACTED Phase 2 scientific result exists: no contracted `results/phase2*` bundle, no `figures-phase2*` root, no bootstrap, and `results/minimal/` is byte-identical to the baseline. Real Phase 2 execution HAS occurred outside any contracted result: Aer timing, method-selection and seed-determinism probes (evidence `1b-01`), and a separately labelled pilot acquisition `results/phase2-pilot` that executed Aer and produced folded circuits, raw density-matrix values and raw shot records for 17 completed of 162 work units under the pre-A-2 `phase2` source before it was stopped; it is quarantined, identity-mismatched with the current source, and its values are never used. `phase2/` holds estimator, simulation and pilot code that has run in tests and in that pilot. No IBM workload has been submitted or prepared. The corrected A-2 candidate was ACCEPTED on 2026-09-08 (independent review round 06 approved it; accepted `phase2` source identity `b7937c07302640fd9949c55f3cbddbc5415937caa76e78041021e65bed219f2b`, now HISTORICAL). Amendment A-3 (2026-09-09, human-approved) then made the `EXP` sign's zero branch portable; the `phase2` source identity after A-3 is `cb08ee1821d056466d5d509749ab3f1630942895f3eec90f920d443f41458b05` (`amendments[A-3]`). Feasibility of the full matrix is unassessed, and the during-run monitoring method carries a documented production NO-GO.
 
 **Machine-readable companion:** `tools/phase2_contract.json` holds every
 constant, threshold, matrix cell, schema and chart named here. Where a number
@@ -74,6 +74,20 @@ pinned scalar `numpy.polyfit` weighted call for every fit, replacing
 closed-form normal equations (the `LIN`/`QUAD` intercepts remain ordinary
 least squares as specified); and every non-finite required density-matrix seed value (`NaN`,
 $\pm\infty$) is undefined exactly like a missing one (§4.8).
+
+**Amendment A-3 (2026-09-09, human-approved; approval precedes every
+contracted Phase 2 analysis).** Recorded as `amendments[A-3]` in the JSON.
+The `EXP` sign keeps the A-2 convention, `np.sign` of the `numpy.polyfit`
+linear intercept minus the asymptote, but its zero branch is now reachable:
+the sign is $0$ when the intercept is within a scale-aware tolerance $\tau$
+of the asymptote (§4.4), whether or not that intercept is exactly zero;
+portability is demonstrated for the recorded intercepts by emulation on one
+platform and the Linux run has not been performed (§4.4). Trigger: on the same admitted
+input $y = \lambda/4$ the floating-point intercept is $-4.965\times10^{-17}$
+on one platform and $+7.020\times10^{-17}$ on another, so the raw sign, the
+estimator branch and the step aggregate differed between platforms. A-1 and
+every other A-2 rule are unchanged; the accepted A-2 source identity
+`b7937c07...` is retained as historical in the JSON record.
 
 **Sections.** §1 scope and boundaries. §2 shared definitions and the three
 references. §3 Phase 2A, channel additivity. §4 Phase 2B, physics-aware
@@ -1005,7 +1019,7 @@ and cell. No extra executions are needed.
 |---|---|---|
 | `LIN` | degree-1 ordinary least squares on $(\lambda_r, E)$, intercept at $\lambda_r = 0$ (the `LinearFactory` estimator, design.md §11) | **primary for every arm** |
 | `QUAD` | degree-2 ordinary least squares on $(\lambda_r, E)$, intercept at $0$ (the `PolyFactory(order=2)` estimator, §9) | reported alongside |
-| `EXP` | $E(\lambda) = a + b\,e^{-c\lambda}$ with the asymptote $a$ fixed in advance (the `ExpFactory(asymptote=a)` estimator), log-linear mode with the design.md §11 clamp policy, the sign being `np.sign` of the `numpy.polyfit` linear intercept minus $a$ (zero at equality, amendment A-2; the same sign seeds the `avoid_log` initial guess): any clamped seed at a step switches all eight seeds at that step to `avoid_log`, a failed nonlinear fit is recorded as `EXP_FIT_FAILED` with no estimate and no substitution (design.md §20 M3-3); at least three distinct realized abscissas in either mode (§4.3 rank rule, amendment A-1) | reported alongside |
+| `EXP` | $E(\lambda) = a + b\,e^{-c\lambda}$ with the asymptote $a$ fixed in advance (the `ExpFactory(asymptote=a)` estimator), log-linear mode with the design.md §11 clamp policy, the sign being `np.sign` of the `numpy.polyfit` linear intercept minus $a$ (zero at equality, amendment A-2, where equality means within the tolerance $\tau$ of amendment A-3 below; the same sign seeds the `avoid_log` initial guess): any clamped seed at a step switches all eight seeds at that step to `avoid_log`, a failed nonlinear fit is recorded as `EXP_FIT_FAILED` with no estimate and no substitution (design.md §20 M3-3); at least three distinct realized abscissas in either mode (§4.3 rank rule, amendment A-1) | reported alongside |
 
 **Why quadratic rather than Richardson.** Richardson extrapolation through
 five scale factors is the degree-4 interpolating polynomial (mitiq
@@ -1054,6 +1068,44 @@ deviation under §8 and voids the confirmatory claim of §4.10:
 4. changing a tolerance, a mask, the peak schedule, a scan order, the
    persistence rule, the control-selection rule or the step window;
 5. adding a cell or a scale factor not in the matrix of §4.11.
+
+**Sign zero tolerance (amendment A-3, 2026-09-09).** Let $\hat b_0$ be
+the `numpy.polyfit` linear intercept of a seed's $(\lambda_r, y)$ points and
+$a$ the asymptote. The `EXP` sign is $0$ if $\lvert \hat b_0 - a\rvert \le
+\tau$ and `np.sign`$(-(a - \hat b_0))$ otherwise, with
+
+$$\tau = C\,\epsilon\,\kappa(V)\,\max_j\lvert y_j\rvert\,\ell,
+\qquad \ell = 1 + \frac{\bar\lambda_r^{\,2}}{\operatorname{var}(\lambda_r)},$$
+
+where $V$ is the degree-1 design matrix `numpy.vander(lambda_r, 2)` that
+`polyfit` forms, $\kappa(V)$ its 2-norm condition number, $\operatorname{var}$
+the population variance (`ddof = 0`), the machine epsilon $\epsilon = 2.220446049250313e-16$
+(IEEE-754 double), and the safety factor C = 4 (`C-A3-SIGN-TOL-C`;
+JSON `phase2b.exp_sign_tolerance`). Every factor is derived: $\epsilon$ is the
+unit roundoff, $\kappa(V)$ the amplification of that roundoff by the
+least-squares solve, $\max\lvert y\rvert$ the data scale, and $\ell$ the
+variance-inflation factor of an intercept extrapolated to $\lambda = 0$
+outside the data. $\tau$ is computed for every fit from its own data; it is
+never a fixed number. For the nominal design $\lambda = 1, 1.25, 1.5, 1.75, 2$
+with $y = \lambda/4$ it is $\tau = 7.965\times10^{-14}$ ($\kappa = 9.440$,
+$\ell = 19$). What the rule does, stated exactly: it sets the sign to $0$
+for ANY intercept whose magnitude is at or below $\tau$, which includes
+genuinely nonzero intercepts; at nominal contract scales that is
+$\lvert \hat b_0 - a\rvert \lesssim 1.6\times10^{-13}$ (for example
+$y = \lambda/4 + 10^{-14}$ has intercept $1.0\times10^{-14}$ and is sign $0$
+under A-3 where the raw sign was $+1$), and on clustered abscissas $\tau$ is
+far larger. The smallest magnitude this preregistration itself discriminates
+is $10^{-9}$, about $1.3\times10^{4}$ times above the nominal $\tau$ for
+$y = \lambda/4$ and $6.3\times10^{3}$ times above the nominal $\tau$ at
+$\max\lvert y\rvert = 1$, so the contracted discrimination is preserved; that
+is a statement about this document's own floor and the nominal design, not a
+claim that behaviour is unchanged for every nonzero intercept, and the
+nominal margin does not cover the whole admitted domain. The nominal $\tau$
+is $665$ times above the observed platform spread of the intercept
+($1.2\times10^{-16}$). Portability status: demonstrated for the two recorded
+intercepts by emulation on one platform (macOS); the Linux run has not been
+performed, so the emulation is a bound on what that run would test, not
+evidence from it.
 
 ### 4.5 References and observables
 

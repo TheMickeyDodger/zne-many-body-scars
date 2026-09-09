@@ -40,6 +40,10 @@ DELIVERABLES = ["docs/prereg-phase2.md", "docs/phase2-analysis-contract.md", "to
 # check_cross verifies these module values against it. The EXP reference functions take the minimum as a
 # required parameter so that no caller can silently apply one phase's guard to the other.
 RANK_RULE_2B = {"LIN": 2, "QUAD": 3, "EXP": 3}
+# Amendment A-3 (2026-09-09, human-approved): scale-aware zero tolerance for the EXP sign. The JSON
+# (`phase2b.exp_sign_tolerance`, C-A3-SIGN-TOL-C, C-A3-EPS) is the authority; these module values are bound to it by a check.
+A3_SIGN_TOL_C = 4
+A3_EPS_DOUBLE = 2.220446049250313e-16
 RANK_RULE_2C = {"LIN": 2, "QUAD": 3, "EXP": 2}
 
 # ============================================================================
@@ -549,12 +553,32 @@ def pinned_linear_intercept(xs, ys):
     return float(np.polyfit(np.asarray(xs, float), np.asarray(ys, float), 1)[-1])
 
 
-def exp_sign(xs, ys, asymptote):
-    """EXP sign exactly as the pinned mitiq v1.0.0 source (inference.py:1345-1348):
-    sign = np.sign(-(asymptote - linear_intercept)); np.sign(0) = 0, so an intercept equal to the
-    asymptote gives sign 0 (amendment A-2, 2026-09-08; the former '>= 0' ternary returned +1 there)."""
+def exp_sign_tolerance(xs, ys, C=None, eps=None):
+    """Amendment A-3 (2026-09-09): tau = C * eps * cond(V) * max|y| * lever, with V = numpy.vander(x, 2) (the degree-1
+    design matrix polyfit forms), lever = 1 + mean(x)^2 / var(x) (population variance, ddof=0), eps the IEEE-754 double
+    machine epsilon and C = 4. Computed per fit from the data; never a fixed number."""
     import numpy as np
-    return float(np.sign(-(asymptote - pinned_linear_intercept(xs, ys))))
+    C = A3_SIGN_TOL_C if C is None else C
+    eps = A3_EPS_DOUBLE if eps is None else eps
+    x = np.asarray(xs, float); y = np.asarray(ys, float)
+    V = np.vander(x, 2)
+    cond = float(np.linalg.cond(V))
+    var = float(np.var(x))                     # ddof=0
+    lever = 1.0 + float(np.mean(x)) ** 2 / var
+    return C * eps * cond * float(np.max(np.abs(y))) * lever
+
+
+def exp_sign(xs, ys, asymptote):
+    """EXP sign as the pinned mitiq v1.0.0 source (inference.py:1345-1348), sign = np.sign(-(asymptote - linear_intercept)),
+    with the zero branch made reachable by amendment A-3 (2026-09-09): sign = 0 when |intercept - asymptote| <= tau
+    (exp_sign_tolerance), else np.sign(-(asymptote - intercept)). A-2 (2026-09-08) had fixed sign(0) = 0 in place of the
+    former '>= 0' ternary; in floating point the intercept of y = x/4 is never exactly zero and its raw sign differs
+    between platforms, which A-3 resolves."""
+    import numpy as np
+    intercept = pinned_linear_intercept(xs, ys)
+    if abs(intercept - asymptote) <= exp_sign_tolerance(xs, ys):
+        return 0.0
+    return float(np.sign(-(asymptote - intercept)))   # intercept = pinned_linear_intercept(xs, ys)
 
 
 def exp_fit_fixed(xs, ys, asymptote, *, min_distinct):
@@ -1287,6 +1311,7 @@ class Checker:
         self.rec("edge: singular design -> FIT_FAILURE; QUAD with 2 distinct abscissas -> FIT_FAILURE", ff and rank_ok)
         self.check_exp_rank_boundary()
         self.check_a2_exp_sign()
+        self.check_a3_sign_tolerance()
         self.check_a2_small_mask()
         self.check_a2_dm_seed_range()
         lo, hi, u, fl = percentile_interval([0.3] * 2000, 0.025, 0.975)
@@ -1531,31 +1556,68 @@ class Checker:
         xs = [1.0, 1.25, 1.5, 1.75, 2.0]
         # Reviewer oracle 1: five zero observations -> sign 0 -> log-mode limit exactly the asymptote 0 (not ~1e-6)
         v0, c0 = exp_fit_fixed(xs, [0.0] * 5, 0.0, min_distinct=m)
-        # Reviewer oracle 2: y = x/4, eight identical seeds -> pinned polyfit intercept, sign 0, clamp -> avoid_log 0.1353653348
+        # oracle 2: y = x/4, eight identical seeds -> the pinned polyfit intercept is a platform-dependent value of either sign
+        # within a few 1e-17 of the exact zero; under A-3 it is within tau -> sign 0 -> clamp -> avoid_log from p0 = [0, -1]
         ys = [x / 4 for x in xs]
         s2 = exp_sign(xs, ys, 0.0)
         agg2, mode2, fl2 = exp_step_aggregate([(xs, ys)] * 8, 0.0, min_distinct=m)
         # near-zero: an intercept a hair below / above the asymptote follows np.sign of the pinned polyfit value
         yb = [x / 4 - 1e-9 for x in xs]; ya = [x / 4 + 1e-9 for x in xs]
         sb, sa = exp_sign(xs, yb, 0.0), exp_sign(xs, ya, 0.0)
-        # nonzero asymptote: y = a exactly; the pinned polyfit intercept is a to rounding, so the sign is whatever
-        # np.sign gives for that rounding (0 -> limit exactly a; +/-1 -> limit a +/- eps, clamped either way)
+        # nonzero asymptote: y = a exactly; the pinned polyfit intercept is a to rounding, within tau -> sign 0 -> limit exactly a
         a = 2.0 ** -6
         va, ca = exp_fit_fixed(xs, [a] * 5, a, min_distinct=m)
         s_a = exp_sign(xs, [a] * 5, a)
         va_ok = (va == a) if s_a == 0.0 else (va == a + s_a * EXP_EPS)
-        s2_ref = float(np.sign(np.polyfit(np.asarray(xs), np.asarray(ys), 1)[-1]))  # the pinned intercept is -4.97e-17 here
-        # both modes agree on the sign (former inconsistency: log mode used '>= 0', avoid_log used np.sign)
-        agree = all(exp_sign(xs, y, 0.0) == float(np.sign(-(0.0 - pinned_linear_intercept(xs, y)))) for y in (ys, yb, ya, [0.0] * 5))
-        ok = (v0 == 0.0 and c0 and s2 == s2_ref and s2 != 1.0 and c2_ok(mode2, agg2) and sb == -1.0 and sa == 1.0 and va_ok and ca and agree
-              and mode2 == "avoid_log" and abs(agg2 - 0.1353653348) < 1e-9)
-        self.rec("a2: EXP sign is the pinned np.sign(-(a - numpy.polyfit intercept)) incl. sign(0) = 0 in BOTH modes: five zeros -> intercept exactly 0, sign 0, limit exactly 0 (clamped, not ~1e-6); y = x/4 x 8 seeds -> pinned intercept -4.97e-17, sign -1 (the former '>= 0' gave +1), clamp, avoid_log 0.1353653348 (not log-mode 0.1325890835); near-zero +/-1e-9 -> +1/-1; y = a (nonzero asymptote) -> follows np.sign of the pinned intercept exactly",
-                 ok, f"v0={v0} s2={s2} ref={s2_ref} mode2={mode2} agg2={agg2} sb={sb} sa={sa} va={va} s_a={s_a}")
+        # both modes take the sign from the one exp_sign (former inconsistency: log mode used '>= 0', avoid_log used np.sign)
+        agree = all(exp_sign(xs, y, 0.0) == (0.0 if abs(pinned_linear_intercept(xs, y)) <= exp_sign_tolerance(xs, y) else float(np.sign(-(0.0 - pinned_linear_intercept(xs, y))))) for y in (ys, yb, ya, [0.0] * 5))
+        ok = (v0 == 0.0 and c0 and s2 == 0.0 and c2_ok(mode2, agg2) and sb == -1.0 and sa == 1.0 and va_ok and ca and agree and mode2 == "avoid_log")
+        self.rec("a2: EXP sign is np.sign(-(a - numpy.polyfit intercept)) in BOTH modes with the A-3 zero tolerance: five zeros -> intercept exactly 0, sign 0, limit exactly 0 (clamped, not ~1e-6); y = x/4 x 8 seeds -> intercept within tau of 0 for both recorded platform values, sign 0, clamp, avoid_log (not log-mode 0.1325890835); near-zero +/-1e-9 -> +1/-1; y = a (nonzero asymptote) -> sign 0 and limit exactly a; one sign-0 seed switches the whole step to avoid_log under the homogeneity rule; the step aggregate is the avoid_log mean",
+                 ok, f"v0={v0} s2={s2} mode2={mode2} agg2={agg2} sb={sb} sa={sa} va={va} s_a={s_a}")
         # homogeneity branch: seven clean seeds plus one exact-zero-intercept seed -> whole step to avoid_log
         clean = ([1.0, 1.5, 2.0], [0.9 * math.exp(-0.4 * x) for x in (1.0, 1.5, 2.0)])
         agg3, mode3, _ = exp_step_aggregate([clean] * 7 + [(xs, ys)], 0.0, min_distinct=m)
-        self.rec("a2: one sign-0 seed (clamped) switches the whole step to avoid_log under the homogeneity rule; the step aggregate is the avoid_log mean, never a mix",
-                 mode3 == "avoid_log" and agg3 is not None and abs(agg3 - (7 * 0.9 + 0.1353653348) / 8) < 1e-6, f"{mode3} {agg3}")
+        v_x4 = exp_fit_avoid_log(xs, ys, 0.0, min_distinct=m)          # the y = x/4 seed in avoid_log from p0 = [0, -1] (A-3 sign 0)
+        v_clean = exp_fit_avoid_log(clean[0], clean[1], 0.0, min_distinct=m)
+        self.rec("a2: one sign-0 seed (clamped) switches the whole step to avoid_log under the homogeneity rule; the step aggregate is the avoid_log mean of all eight seeds, never a mix",
+                 mode3 == "avoid_log" and agg3 is not None and abs(agg3 - (7 * v_clean + v_x4) / 8) < 1e-9 and abs(v_clean - 0.9) < 1e-6, f"{mode3} {agg3} v_x4={v_x4}")
+
+    # ---------------- amendment A-3 fixtures (2026-09-09): portable zero branch ----------------
+    def check_a3_sign_tolerance(self):
+        import numpy as np
+        m = RANK_RULE_2B["EXP"]
+        xs = [1.0, 1.25, 1.5, 1.75, 2.0]; ys = [x / 4 for x in xs]
+        tau = exp_sign_tolerance(xs, ys)
+        # fixture 1: the exact-zero intercept; the two measured platform values must both map to sign 0
+        measured = {"macOS Accelerate numpy 2.2.6": -4.965068306494546e-17, "Linux CI": 7.019562571716503e-17}
+        ic = pinned_linear_intercept(xs, ys)
+        f1 = exp_sign(xs, ys, 0.0) == 0.0 and abs(ic) <= tau and all(abs(v) <= tau for v in measured.values())
+        # the derivation's factors for this fixture (decision brief section 3): cond(V) 9.440009, lever 19.0, max|y| 0.5
+        V = np.vander(np.asarray(xs), 2); cond = float(np.linalg.cond(V)); lever = 1 + np.mean(xs) ** 2 / np.var(xs)
+        factors_ok = abs(cond - 9.440009) < 1e-5 and abs(lever - 19.0) < 1e-12 and abs(tau - 7.965192e-14) < 1e-18
+        # margins for THIS nominal fixture (brief section 4.3): the contract's smallest discriminated magnitude 1e-9 is >= 1e4 above tau, and tau is
+        # >= 100x above the observed platform spread; these say nothing about the whole admitted domain
+        spread = abs(measured["Linux CI"] - measured["macOS Accelerate numpy 2.2.6"])
+        margins_ok = 1e-9 / tau > 1e4 and tau / spread > 100
+        # fixture 2: offsets +/-1e-9 and +/-1e-12 exceed tau (by ~1.3e4 and ~13x here) and so give +1 / -1
+        f2 = all(exp_sign(xs, [x / 4 + d for x in xs], 0.0) == np.sign(d) for d in (1e-9, -1e-9, 1e-12, -1e-12))
+        # fixture 3: exact zeros -> intercept 0.0, sign 0, limit exactly the asymptote
+        v0, c0 = exp_fit_fixed(xs, [0.0] * 5, 0.0, min_distinct=m)
+        f3 = pinned_linear_intercept(xs, [0.0] * 5) == 0.0 and exp_sign(xs, [0.0] * 5, 0.0) == 0.0 and v0 == 0.0 and c0
+        # fixture 4: nonzero asymptote and homogeneity behave as under A-2 for these fixtures (intercepts far above tau)
+        a = 0.25; dec = [a + 0.9 * math.exp(-0.4 * x) for x in xs]
+        va, ca = exp_fit_fixed(xs, dec, a, min_distinct=m)
+        f4 = exp_sign(xs, dec, a) == 1.0 and abs(va - (a + 0.9)) < 1e-9 and not ca and exp_sign(xs, [a - 0.1 - 0.3 * x for x in xs], a) == -1.0
+        # fixture 5: the raw np.sign mutant returns a nonzero sign on fixture 1 (it cannot return 0 there, since the
+        # floating-point intercept is never exactly zero); the A-3 rule returns 0
+        raw = float(np.sign(-(0.0 - ic)))
+        f5 = raw != 0.0 and exp_sign(xs, ys, 0.0) == 0.0
+        # tau scales with the data: it is computed per fit, not a constant
+        tau_big = exp_sign_tolerance(xs, [10 * y for y in ys]); tau_wide = exp_sign_tolerance([1, 2, 3, 4, 5], ys)
+        scales = abs(tau_big - 10 * tau) < 1e-25 and tau_wide != tau
+        self.rec("a3: EXP sign zero tolerance tau = C*eps*cond(V)*max|y|*lever (C = 4, eps 2.220446049250313e-16, lever = 1 + mean^2/var with ddof=0): fixture 1 y = x/4 -> sign 0 on both measured platform intercepts (-4.965e-17 macOS, +7.020e-17 Linux; tau 7.965e-14 = cond 9.440009 x lever 19 x 0.5 x 4 eps); margins > 1e4 against 1e-9 and > 100x above the platform spread; offsets +/-1e-9 and +/-1e-12 exceed tau and give +1/-1; exact zeros -> 0; nonzero asymptote fixtures behave as under A-2; the raw np.sign mutant fails fixture 1; tau scales with the data; any intercept at or below tau, including a genuinely nonzero one, is sign 0 (portability of fixture 1 is demonstrated for the recorded intercepts by emulation on macOS; the Linux leg has not been run)",
+                 f1 and factors_ok and margins_ok and f2 and f3 and f4 and f5 and scales,
+                 f"ic={ic} tau={tau} cond={cond} lever={lever} raw={raw} f1={f1} factors={factors_ok} margins={margins_ok} f2={f2} f3={f3} f4={f4} f5={f5} scales={scales}")
 
     def check_a2_small_mask(self):
         good = phase2a_step(0.5, 0.45, 0.4, 0.36)
@@ -2458,8 +2520,20 @@ class Checker:
         src = inspect.getsource(exp_fit_fixed) + inspect.getsource(exp_sign) + inspect.getsource(exp_fit_avoid_log)
         sign_ok = ("`np.sign` of the linear intercept minus $a$" in c43 and "numpy.polyfit" in c43 and "sigma = 0" in c43.replace("$\\sigma = 0$", "sigma = 0")
                    and "`np.sign` of the `numpy.polyfit` linear intercept" in s44 and "np.sign(-(asymptote - numpy.polyfit" in ex_txt
-                   and re.search(r">=\s*0\s+else", src) is None and "np.sign(-(asymptote - pinned_linear_intercept" in src and src.count("exp_sign(xs, ys, asymptote)") >= 2)
+                   and re.search(r">=\s*0\s+else", src) is None and "intercept = pinned_linear_intercept(xs, ys)" in src and "np.sign(-(asymptote - intercept" in src and src.count("exp_sign(xs, ys, asymptote)") >= 2)
         self.rec("a2: EXP sign convention agrees on every surface (prereg §4.4, contract §C4.3, JSON phase2b.extrapolators.EXP, checker source: np.sign of the numpy.polyfit intercept, no '>= 0' ternary, one exp_sign used by both modes)", sign_ok)
+        # A-3: the tolerance rule on every surface, with explicit numeric authority in the JSON (style of phase2b.rank_rule)
+        a3 = next((x for x in c.get("amendments", []) if x.get("id") == "A-3"), None)
+        tol = c.get("phase2b", {}).get("exp_sign_tolerance", {})
+        kc = c.get("constants", {}).get("C-A3-SIGN-TOL-C", {}); ke = c.get("constants", {}).get("C-A3-EPS", {})
+        a3_ok = (a3 is not None and a3.get("date") == "2026-09-09" and "historical_identities_pre_a3" in a3
+                 and a3["historical_identities_pre_a3"].get("phase2_source_sha256_accepted_a2") == "b7937c07302640fd9949c55f3cbddbc5415937caa76e78041021e65bed219f2b"
+                 and tol.get("C") == A3_SIGN_TOL_C and tol.get("eps") == A3_EPS_DOUBLE and kc.get("value") == A3_SIGN_TOL_C and ke.get("value") == A3_EPS_DOUBLE
+                 and "lever" in tol.get("formula", "") and "cond" in tol.get("formula", "") and tol.get("ddof") == 0
+                 and "tau" in ex_txt and "A-3" in ex_txt
+                 and "amendment A-3" in c43 and "\\tau" in c43 and "amendment A-3" in s44 and "\\tau" in s44
+                 and "exp_sign_tolerance(xs, ys)" in inspect.getsource(exp_sign) and "np.vander(x, 2)" in inspect.getsource(exp_sign_tolerance) and "np.var(x)" in inspect.getsource(exp_sign_tolerance))
+        self.rec("a3: the sign tolerance is recorded on every surface (JSON amendments[A-3] with the historical accepted-A-2 source identity, phase2b.exp_sign_tolerance {C, eps, formula, ddof 0}, constants C-A3-SIGN-TOL-C = 4 and C-A3-EPS bound to the checker's A3_SIGN_TOL_C / A3_EPS_DOUBLE, prereg §4.4, contract §C4.3, checker exp_sign via exp_sign_tolerance)", a3_ok)
         c41 = self._section(con, r"^### C4\.1 ")
         s36 = self._section(pre, r"^### 3\.6 ")
         km = c.get("constants", {}).get("C-MIN-MASKED", {})

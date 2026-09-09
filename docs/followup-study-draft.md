@@ -1,7 +1,8 @@
 # Phase 2 Planning Notes: Charts and Analysis
 
 > **Current status, 2026-09-08 (supersedes the two dated updates below).** The corrected A-2 candidate was accepted
-> (independent review round 06; accepted `phase2` source identity `b7937c07302640fd9949c55f3cbddbc5415937caa76e78041021e65bed219f2b`).
+> (independent review round 06; accepted `phase2` source identity `b7937c07302640fd9949c55f3cbddbc5415937caa76e78041021e65bed219f2b`,
+> now historical: amendment A-3 of 2026-09-09 made the `EXP` sign's zero branch reachable, source identity `cb08ee1821d05646...`).
 > The Phase 2 framework (preregistration, contract, checker, estimators, tests) is implemented. Phase 2 science has NOT been
 > run: no contracted result exists, feasibility is unassessed, and a quarantined pilot acquisition (17 of 162 work units,
 > stopped, values unused) did execute the Aer simulator and produce raw records. The dated updates below are kept as written.
