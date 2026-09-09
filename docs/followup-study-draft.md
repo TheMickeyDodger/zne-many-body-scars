@@ -1,5 +1,54 @@
 # Phase 2 Planning Notes: Charts and Analysis
 
+> **Current status, 2026-09-08 (supersedes the two dated updates below).** The corrected A-2 candidate was accepted
+> (independent review round 06; accepted `phase2` source identity `b7937c07302640fd9949c55f3cbddbc5415937caa76e78041021e65bed219f2b`).
+> The Phase 2 framework (preregistration, contract, checker, estimators, tests) is implemented. Phase 2 science has NOT been
+> run: no contracted result exists, feasibility is unassessed, and a quarantined pilot acquisition (17 of 162 work units,
+> stopped, values unused) did execute the Aer simulator and produce raw records. The dated updates below are kept as written.
+>
+> **Update, 2026-09-08 (A-1). HISTORICAL: written before A-2 and the pilot acquisition; "now" and "still" in this paragraph refer to that date and are superseded by the current status above; original wording kept.** Amendment A-1 (human-approved, pre-data) fixed the Phase 2B
+> `EXP` rank minimum at three distinct realized abscissas (`docs/prereg-phase2.md` §4.3); Phase 2C
+> keeps two. An offline Phase 2 environment and unexecuted scaffolding now exist; there is still
+> no Phase 2 data, figure or result. The note below is historical as dated.
+>
+> **Update, 2026-09-08 (A-2). HISTORICAL: written before the A-2 correction was accepted; superseded by the current status above; original wording kept.** A second human-approved amendment fixed the `EXP` sign
+> convention, the small-mask Phase 2A rule and the DM companion seed range (`docs/prereg-phase2.md`
+> header; `tools/phase2_contract.json` `amendments`). Unaffected Aer probes and a quarantined pilot
+> acquisition exist; still no contracted Phase 2 result.
+>
+> **Supersession, 2026-09-07.** Phase 2 is now preregistered in
+> `docs/prereg-phase2.md`, with its recomputable analysis and output
+> contract in `docs/phase2-analysis-contract.md` and its machine-readable
+> companion `tools/phase2_contract.json`. Phase 2 remains **unexecuted**:
+> no Phase 2 code, data, figure, simulator result or hardware result exists.
+>
+> What that preregistration supersedes in this document:
+>
+> - the Tier B planned commands R-B1 and R-B2 and the charts FC-5 and FC-6
+>   that depend on them (§3, §5), and the quantities Q8 and the prospective
+>   single-rate role of Q7 (§4);
+> - the six open decisions of §6 (hypothesis intervals, residual tolerance,
+>   the $10^{-9}$ rules' role, the additivity criterion, the mask threshold,
+>   and the heuristic floor arithmetic as a Phase 2 objective).
+>
+> The current design differs from the framing here in two ways a reader must
+> not miss. First, the primary Phase 2A analysis is the curve-level
+> interaction $I(n) = A_{11} - A_{10} - A_{01} + A_{00}$ with declared
+> material equivalence margins; the single-rate slopes $g_{ij}$ and
+> $\Delta = g_{12} - (g_1 + g_2)$ are secondary, with their adequacy limits
+> stated. Second, the new preregistration **reruns all four factorial cells
+> prospectively** under one Phase 2 implementation and environment; the
+> v0.1.0 combined arm is used **only as a historical cross-check**, never as
+> a factorial cell, so the "two of the four cells already exist" framing of
+> FC-6 no longer applies.
+>
+> What remains valid and unchanged: the Tier A recomputations of the
+> recorded v0.1.0 data (FC-1 to FC-4, Q1 to Q7 as a post-hoc diagnostic, and
+> commands R-1 to R-7), which read only `results/minimal/` and produce no new
+> result. This document is otherwise a historical record. Apart from the
+> duplicated clause in the FC-6 plot-type bullet, which was removed on
+> 2026-09-07 so the sentence reads once, its body text is unchanged.
+
 > As of 2026-09-06, work on Phase 2 has not started. This document lays out
 > possible work; it is not a preregistration or an approved study. The
 > $p_2 = 0$, $p_1 = 0$, and factorial experiments have not been written or
@@ -56,8 +105,8 @@ names are exactly as they appear in the CSV headers.
 | `folded_circuits.csv` | 960 (40 steps × 8 fold seeds × 3 nominal scale factors) | `n, fold_seed, lambda_nominal, lambda_r, lambda_eff, expectation_dm, cx, sx, x, rz, sxdg` |
 | `shot_values.csv` | 960 | `n, fold_seed, lambda_nominal, expectation_shot, seed_simulator` |
 | `seed_arms.csv` | 320 (40 steps × 8 fold seeds) | `n, fold_seed, primary_intercept, nominal_intercept, effective_intercept, clamp_flag, secondary_log, secondary_avoid_log, secondary_avoid_log_failed, shot_clamp_flag, shot_secondary_log, shot_secondary_avoid_log, shot_secondary_avoid_log_failed` |
-| `metrics.json` | — | top-level keys `gif_value, rms_u, rms_m, if_wins, reportable_steps_m, excluded_steps, majority_passes, verdict_passes, gif_is_lower_bound, m_zero_flagged, primary_pipeline`, and the same metric keys (plus `note`) under `shot_pipeline` |
-| `environment.json` | — | keys `design_section, parameters, platform, source_identifier_note, source_tree_sha256, versions`; the rates used below are `parameters.noise.p1`, `parameters.noise.p2`, with gate classes `parameters.noise.one_qubit_gates`, `parameters.noise.two_qubit_gates`, `parameters.noise.clean_gates` |
+| `metrics.json` | - | top-level keys `gif_value, rms_u, rms_m, if_wins, reportable_steps_m, excluded_steps, majority_passes, verdict_passes, gif_is_lower_bound, m_zero_flagged, primary_pipeline`, and the same metric keys (plus `note`) under `shot_pipeline` |
+| `environment.json` | - | keys `design_section, parameters, platform, source_identifier_note, source_tree_sha256, versions`; the rates used below are `parameters.noise.p1`, `parameters.noise.p2`, with gate classes `parameters.noise.one_qubit_gates`, `parameters.noise.two_qubit_gates`, `parameters.noise.clean_gates` |
 
 Flag and mode columns are integer 0/1 (`reportable`, `if_is_lower_bound`,
 `clamp_flag`, `secondary_avoid_log_failed`, and their `shot_` counterparts) or
@@ -97,7 +146,7 @@ or implied" (design.md §13, denominator bullet). Legends must say
 "seed-spread SD" or "SEM", never "95%" or "uncertainty" without
 qualification.
 
-### FC-1 — Per-step improvement factor with the pre-registered mask (Tier A)
+### FC-1 - Per-step improvement factor with the pre-registered mask (Tier A)
 
 - **Plot type:** points joined by a thin line, one panel per pipeline
   (density-matrix primary; shot pipeline).
@@ -130,7 +179,7 @@ qualification.
   columns with $\delta = 10^{-9}$ and the shot columns with
   $\delta = 10^{-3}$). **Command:** R-1.
 
-### FC-2 — Recorded total attenuation ratio against the §11 heuristic (Tier A)
+### FC-2 - Recorded total attenuation ratio against the §11 heuristic (Tier A)
 
 - **Plot type:** two stacked panels sharing x. Upper: $r(n)$ (linear y).
   Lower: $\ln r(n)$ (linear y). On the lower panel a single-exponential
@@ -165,7 +214,7 @@ qualification.
   form of the response.
 - **Quantities:** Q3, Q4. **Command:** R-3, R-4.
 
-### FC-3 — Folding granularity: realized and effective scale vs nominal (Tier A)
+### FC-3 - Folding granularity: realized and effective scale vs nominal (Tier A)
 
 - **Plot type:** strip/scatter, one point per `(n, fold_seed)`, three facets
   by `lambda_nominal` ∈ {1.0, 1.5, 2.0}.
@@ -190,7 +239,7 @@ qualification.
   reported in `docs/results-minimal.md` §4 and are not revisited here.
 - **Quantities:** Q5. **Command:** R-5.
 
-### FC-4 — Per-seed primary intercept error and the seed-spread band (Tier A)
+### FC-4 - Per-seed primary intercept error and the seed-spread band (Tier A)
 
 - **Plot type:** strip plot of per-seed values with the per-step central
   value and its band overlaid; two panels (density-matrix primary; shot
@@ -246,7 +295,7 @@ qualification.
   from `seed_arms.csv` and the shot seed statistics, mean, SD, SEM, and error
   band, from the reconstructed shot intercepts). **Command:** R-1, R-6.
 
-### FC-5 — Isolated single-qubit attenuation, $p_2 = 0$ control (Tier B)
+### FC-5 - Isolated single-qubit attenuation, $p_2 = 0$ control (Tier B)
 
 - **Data required:** the $(p_1, p_2) = (10^{-3}, 0)$ arm described in
   `docs/prereg-p2zero-outline.md`. No code or data exist for this arm, and
@@ -276,7 +325,7 @@ qualification.
   between channels or change the v0.1.0 result.
 - **Quantities:** Q3 (applied to the future arm), Q8. **Command:** R-B1.
 
-### FC-6 — $2 \times 2$ factorial additivity check (Tier B)
+### FC-6 - $2 \times 2$ factorial additivity check (Tier B)
 
 - **Available data:** two of the four cells. The $(0, 0)$
   cell is the recorded `e0_trotter` reference and the $(10^{-3}, 10^{-2})$
@@ -287,8 +336,7 @@ qualification.
 - **Plot type:** a point chart of the three fitted rates
   $g_1, g_2, g_{12}$ (dimensionless per step, linear y) and, in a second
   panel, the additivity residual $\Delta = g_{12} - (g_1 + g_2)$ with the
-  additivity residual $\Delta = g_{12} - (g_1 + g_2)$ with the permitted
-  range drawn as a band. That range has not been chosen (outline §5), so it
+  permitted range drawn as a band. That range has not been chosen (outline §5), so it
   cannot yet be drawn.
 - **x:** categorical (the three arms; then the single residual). **y:** rate
   per step, dimensionless, linear.
@@ -315,7 +363,7 @@ $E_{\text{ZNE}}(n)$ is the mean primary ZNE estimate
 (`zne_primary_mean`), while $E^{(s)}_{\text{ZNE}}(n)$ is the primary intercept
 for seed $s$ (`primary_intercept`), with $s=1,\ldots,8$.
 
-### Q1 — Per-step errors and improvement factor
+### Q1 - Per-step errors and improvement factor
 
 As defined in design.md §13,
 $\varepsilon_u(n) = |E_{\text{noisy}}(n) - E_0(n)|$;
@@ -351,7 +399,7 @@ no non-finite value enters any table.
 
 These definitions are unchanged.
 
-### Q2 — Aggregate error and improvement
+### Q2 - Aggregate error and improvement
 
 $\mathrm{RMS}_u = \sqrt{\tfrac{1}{40}\sum_{n=1}^{40}\varepsilon_u(n)^2}$,
 $\mathrm{RMS}_m$ is defined in the same way, and
@@ -363,7 +411,7 @@ does not occur in the recorded data. The recorded values
 (`metrics.json`): $\mathrm{RMS}_u = 0.32079729685433694$,
 $\mathrm{RMS}_m = 0.25106736243976785$, $\mathrm{GIF} = 1.2777339664421639$.
 
-### Q3 — Attenuation ratio and its logarithm
+### Q3 - Attenuation ratio and its logarithm
 
 $$ r(n) = \frac{E_{\text{noisy}}(n)}{E_0(n)}, \qquad \ell(n) = \ln r(n), \qquad
 \mathcal{M} = \{\, n : |E_0(n)| \ge 0.1 \,\}. $$
@@ -390,7 +438,7 @@ masked and the unmasked step lists.
 The threshold 0.1 is still a proposal. Using it for this calculation does not
 make it part of the final analysis plan.
 
-### Q4 — Estimated total exposure at $\lambda = 1$
+### Q4 - Estimated total exposure at $\lambda = 1$
 
 Following §11, $\gamma_k \equiv -\ln(1 - p_k)$,
 $\Gamma_2 = N_2\gamma_2$, $\Gamma_1 = N_1\gamma_1$, with $N_2$ the total number
@@ -419,7 +467,7 @@ not a theorem, and
 `docs/results-minimal.md` §8 already records that the observed total decay is
 roughly half its rate. The curve is used only as a reference.
 
-### Q5 — Realized and effective scale factors
+### Q5 - Realized and effective scale factors
 
 Following §10, $\lambda_r = N_{cx}^{\text{folded}}/N_{cx}^{\text{base}}$
 (measured from the folded circuit), and
@@ -448,7 +496,7 @@ the same-$n$ row with `lambda_nominal == 1.0`; rates from `environment.json`.
 Section 10 also gives the quantization rule $\lambda_r \in \{1 + m/(5n)\}$;
 $\lambda = 1.5$ is exactly achievable only at even $n$.
 
-### Q6 — Variation across seeds
+### Q6 - Variation across seeds
 
 $\bar E_{\text{ZNE}}(n) = \tfrac18\sum_s E^{(s)}_{\text{ZNE}}(n)$. Let $s_n$
 be the sample standard deviation across seeds, calculated with `ddof=1`; the
@@ -489,10 +537,10 @@ confidence interval.
   `secondary_avoid_log_failed == 1` (or `shot_` counterpart) has no
   estimate: "no partial or mixed averages" (design.md §11; §20 M3-3).
 - The recorded density-matrix secondary has zero flags and the shot
-  secondary has flagged steps at $n = 34$–$37$ (`docs/results-minimal.md`
+  secondary has flagged steps at $n = 34$ - $37$ (`docs/results-minimal.md`
   §6); R-6 prints the recorded flag counts.
 
-### Q7 — Attenuation rate in the existing combined-noise data
+### Q7 - Attenuation rate in the existing combined-noise data
 
 Over the masked steps $\mathcal{M}$ of Q3 with $\ell(n) = \ln r(n)$, the
 ordinary least-squares line $\ell(n) \approx a + b\,n$:
@@ -506,7 +554,7 @@ data were collected, it is post-hoc.
 The analysis reports two values: the raw fitted rate $\hat g = -b$, and the
 rate $g$ after applying the rule in outline §2:
 $g = 0$ if $\hat g \in [-10^{-9}, 0)$, otherwise $g = \hat g$. A raw
-$\hat g < -10^{-9}$ is not treated; it triggers the "model inadequate —
+$\hat g < -10^{-9}$ is not treated; it triggers the "model inadequate -
 anti-attenuation" verdict (outline §4) and no rate is used further. R-7
 prints both $\hat g_{12}$ and $g_{12}$.
 
@@ -536,7 +584,7 @@ R-7 calculates $g_{12}$. It is different from the oracle rates in
 and Q7 applies a mask while §9 does not. The values should not be compared as
 though they measure the same thing.
 
-### Q8 — Control-arm rates and additivity
+### Q8 - Control-arm rates and additivity
 
 $g_1$ is the Q7 estimator applied to the future $(10^{-3}, 0)$ arm's
 $r_1(n)$, and $g_2$ is the same on the future $(0, 10^{-2})$ arm.
@@ -549,7 +597,7 @@ R-B1 and R-B2 print both values and use the adjusted value in $\Delta$.
 - Each arm passes the outline's adequacy gate (0 < r ≤ 1 + 10⁻⁹ on all
   masked steps).
 - The fitted rate must not trigger the anti-attenuation rule. Under outline
-  §§2 and 4, $g_1 < -10^{-9}$ is classified as “model inadequate —
+  §§2 and 4, $g_1 < -10^{-9}$ is classified as “model inadequate -
   anti-attenuation,” while $g_1 \in [-10^{-9},0)$ is treated as zero.
 - The same mask on all arms.
 - A residual tolerance specified before any run.
@@ -576,7 +624,7 @@ When a command checks a recorded column, it prints the largest absolute
 difference. A result near floating-point rounding error (about $10^{-16}$),
 or exactly zero, confirms that the column contains the stated calculation.
 
-### R-1 — Per-step errors, improvement factors, and masks
+### R-1 - Per-step errors, improvement factors, and masks
 
 ```bash
 .venv/bin/python -c "import csv,json; R=list(csv.DictReader(open('results/minimal/steps.csv'))); P=json.load(open('results/minimal/environment.json'))['parameters']; emin=P['eps_min']
@@ -592,7 +640,7 @@ for tag,base,mit,delta in [('dm','e_noisy_dm','zne_primary_mean',P['delta_densit
     print(tag,'rows',len(R),'delta',delta,'eps_min',emin,'max_abs_dev_vs_recorded',d,'reportable_m',rep,'if_wins',wins,'lower_bound_rows',lb)"
 ```
 
-### R-2 — Aggregate metrics
+### R-2 - Aggregate metrics
 
 ```bash
 .venv/bin/python -c "import csv,json,math; R=list(csv.DictReader(open('results/minimal/steps.csv'))); m=json.load(open('results/minimal/metrics.json'))
@@ -600,7 +648,7 @@ ru=math.sqrt(sum(float(r['eps_u'])**2 for r in R)/len(R)); rm=math.sqrt(sum(floa
 print('n_steps',len(R),'rms_u',ru,'rms_m',rm,'gif',ru/rm); print('dev_vs_metrics',ru-m['rms_u'],rm-m['rms_m'],ru/rm-m['gif_value'])"
 ```
 
-### R-3 — Attenuation ratio and logarithm for all 40 steps
+### R-3 - Attenuation ratio and logarithm for all 40 steps
 
 ```bash
 .venv/bin/python -c "import csv,math; R=list(csv.DictReader(open('results/minimal/steps.csv'))); out=[]
@@ -612,7 +660,7 @@ print('steps',len(out),'masked_in',len(inc),'masked_out',exc); print('sign_flips
 for n,masked,ratio in out: print('n',n,'mask','IN ' if masked else 'OUT','r',ratio,'ln_r',(math.log(ratio) if ratio>0 else 'undefined (r<=0)') if ratio==ratio else 'undefined (E0=0)')"
 ```
 
-### R-4 — Estimated exposure from recorded gate counts and error rates
+### R-4 - Estimated exposure from recorded gate counts and error rates
 
 ```bash
 .venv/bin/python -c "import csv,json,math; env=json.load(open('results/minimal/environment.json'))['parameters']['noise']; g1=-math.log(1-env['p1']); g2=-math.log(1-env['p2'])
@@ -626,7 +674,7 @@ for n in sorted(base):
     print('n',n,'N2',N2,'N1',N1,'Gamma',G,'Gamma_per_step',G/n,'exp(-Gamma)',math.exp(-G))"
 ```
 
-### R-5 — Realized and effective scale factors
+### R-5 - Realized and effective scale factors
 
 ```bash
 .venv/bin/python -c "import csv,json,math; env=json.load(open('results/minimal/environment.json'))['parameters']['noise']; g1=-math.log(1-env['p1']); g2=-math.log(1-env['p2'])
@@ -640,7 +688,7 @@ for r in F:
 print('rows',len(F),'max_dev_lambda_r',dr,'max_dev_lambda_eff',de,'rows_with_lambda_r_ne_nominal',offgrid,'lambda_eff_le_lambda_r_everywhere',all(float(r['lambda_eff'])<=float(r['lambda_r'])+1e-12 for r in F))"
 ```
 
-### R-6 — Variation across seeds and fit-status counts
+### R-6 - Variation across seeds and fit-status counts
 
 ```bash
 .venv/bin/python -c "import csv,math,statistics as S,numpy as np; st={int(r['n']):r for r in csv.DictReader(open('results/minimal/steps.csv'))}; A=list(csv.DictReader(open('results/minimal/seed_arms.csv'))); by={}
@@ -663,7 +711,7 @@ print('clamp_flag',sum(int(r['clamp_flag']) for r in A),'secondary_avoid_log_fai
 print('shot_secondary_mode_by_step',{n:st[n]['shot_secondary_mode'] for n in st if st[n]['shot_secondary_mode']!='log'},'empty_shot_secondary_estimate',[n for n in st if st[n]['shot_secondary_estimate']==''])"
 ```
 
-### R-7 — OLS attenuation rate for the existing combined-noise data
+### R-7 - OLS attenuation rate for the existing combined-noise data
 
 ```bash
 .venv/bin/python -c "import csv,math; R=list(csv.DictReader(open('results/minimal/steps.csv'))); masked=[]
@@ -683,7 +731,7 @@ for x,e in res: print('residual n=%d e=%r'%(x,e))
 print('masked_points',k,'g12_raw',g12_raw,'g12_treated',g12,'anti_attenuation_flag',g12_raw<-1e-9,'intercept',a,'max_abs_residual',max(abs(e) for _,e in res),'rms_residual',math.sqrt(sum(e*e for _,e in res)/k),'NOTE: no residual tolerance has been set; this command does not classify the fit')"
 ```
 
-### R-B1 — Planned Q3/Q8 command for the $p_2 = 0$ arm (FC-5)
+### R-B1 - Planned Q3/Q8 command for the $p_2 = 0$ arm (FC-5)
 
 The required data do not exist. Run this command only after the study has an
 approved preregistration and has created a new data bundle. Replace the
@@ -712,7 +760,7 @@ if TAU_RES is not None and max(abs(e) for _,e in res)>TAU_RES: raise SystemExit(
 print('masked_points',k,'g1_raw',g1_raw,'g1_treated',g1,'max_abs_residual',max(abs(e) for _,e in res),'NOTE: the residual tolerance and H-G/H-L intervals are not final; this command does not issue a result')"
 ```
 
-### R-B2 — Planned Q8 additivity command for FC-6
+### R-B2 - Planned Q8 additivity command for FC-6
 
 Two of the three rates cannot yet be calculated because the control-arm data
 do not exist. Outline §5 requires the additivity threshold
@@ -789,7 +837,7 @@ have been designed, approved, and run.
 | FC-2 | A | $r(n)$, $\ln r(n)$ vs heuristic $e^{-\Gamma(n)}$, proposed mask | `results/minimal/steps.csv`; `results/minimal/folded_circuits.csv`; `results/minimal/environment.json` | `n`, `e0_trotter`, `e_noisy_dm`; `n`, `lambda_nominal`, `cx`, `sx`, `x`, `sxdg`; `parameters.noise.p1`, `parameters.noise.p2` | §4 Q3, Q4 | design.md §11 (heuristic, γ_k, Γ_k); results-minimal.md §8 (discrepancy); mask: prereg outline §4 (not final) | R-3 (all 40 steps: $r$, $\ln r$ where defined, mask marker), R-4 (all 40 steps: $N_1$, $N_2$, $\Gamma$, $e^{-\Gamma}$) | Y |
 | FC-3 | A | $\lambda_r - \lambda_{\text{nominal}}$ and $\lambda_{\text{eff}} - \lambda_r$ per (n, seed, λ) | `results/minimal/folded_circuits.csv`; `results/minimal/environment.json` | `n`, `fold_seed`, `lambda_nominal`, `lambda_r`, `lambda_eff`, `cx`, `sx`, `x`, `sxdg`; `parameters.noise.p1`, `parameters.noise.p2` | §4 Q5 | design.md §10 (λ_r, λ_eff, quantization grid); §20 M2-6 (degenerate case) | R-5 | Y |
 | FC-4 | A | Per-seed $\varepsilon^{(s)}_m(n)$, central $\varepsilon_m(n)$, seed-spread band, shot SD/SEM/band (shot intercepts reconstructed) | `results/minimal/seed_arms.csv`; `results/minimal/steps.csv`; `results/minimal/shot_values.csv`; `results/minimal/folded_circuits.csv` | `n`, `fold_seed`, `primary_intercept`; `n`, `e0_trotter`, `eps_m`, `eps_m_band`, `zne_primary_mean`, `zne_primary_std`, `shot_primary_mean`, `shot_primary_std`, `shot_primary_sem`, `shot_eps_m`, `shot_eps_m_band`; `shot_values.csv`: `n`, `fold_seed`, `lambda_nominal`, `expectation_shot`; `folded_circuits.csv`: `n`, `fold_seed`, `lambda_nominal`, `lambda_r` | §4 Q1, Q6 | design.md §13 (uncertainty bullet); results-minimal.md §6 (density-matrix spread is not statistical error; shot spread includes sampling variation; neither a confidence interval) | R-1, R-6 | Y |
-| FC-5 | B | $\ln r_1(n)$ and residuals on the $p_2 = 0$ arm | future `results/<p2zero-arm>/steps.csv` (does not exist); `results/minimal/steps.csv` for the reference $E_0$ | future `n`, `e0_trotter`, `e_noisy_dm`; recorded `e0_trotter` | §4 Q3, Q8 | prereg outline §§3–5 (proposed mask, hypothesis intervals, and residual tolerance; fixed $10^{-9}$ policy rules); design.md §16 bundle format | R-B1 (prints each residual and applies the anti-attenuation rule; the residual test remains disabled until its tolerance is set) | N: the $(10^{-3}, 0)$ arm has not been run and the preregistration is incomplete |
+| FC-5 | B | $\ln r_1(n)$ and residuals on the $p_2 = 0$ arm | future `results/<p2zero-arm>/steps.csv` (does not exist); `results/minimal/steps.csv` for the reference $E_0$ | future `n`, `e0_trotter`, `e_noisy_dm`; recorded `e0_trotter` | §4 Q3, Q8 | prereg outline §§3-5 (proposed mask, hypothesis intervals, and residual tolerance; fixed $10^{-9}$ policy rules); design.md §16 bundle format | R-B1 (prints each residual and applies the anti-attenuation rule; the residual test remains disabled until its tolerance is set) | N: the $(10^{-3}, 0)$ arm has not been run and the preregistration is incomplete |
 | FC-6 | B | $g_1, g_2, g_{12}$ and $\Delta = g_{12} - (g_1 + g_2)$ | future `results/<p2zero-arm>/steps.csv` and `results/<p1zero-arm>/steps.csv` (neither exists); `results/minimal/steps.csv` | `n`, `e0_trotter`, `e_noisy_dm` in each | §4 Q7, Q8 | prereg outline §5 (factorial design and proposed additivity rule); design.md §11 | R-7 ($g_{12}$ only), R-B2 (checks each arm; the residual and additivity tests remain disabled until their limits are set) | N: the two control arms have no data and $\tau_{\text{add}}$ has not been chosen |
 | Q1 | A | $\varepsilon_u$, $\varepsilon_m$, $\mathrm{IF}$, reportable mask (both pipelines) | `results/minimal/steps.csv`; `results/minimal/environment.json` | `e0_trotter`, `e_noisy_dm`, `zne_primary_mean`, `eps_u`, `eps_m`, `if_value`, `if_is_lower_bound`, `reportable`, `shot_baseline_mean`, `shot_primary_mean`, `shot_eps_u`, `shot_eps_m`, `shot_if_value`, `shot_if_is_lower_bound`, `shot_reportable`; `parameters.eps_min`, `parameters.delta_density_matrix`, `parameters.delta_shot` | §4 Q1 | design.md §13 | R-1 | Y |
 | Q2 | A | $\mathrm{RMS}_u$, $\mathrm{RMS}_m$, $\mathrm{GIF}$ | `results/minimal/steps.csv`; `results/minimal/metrics.json` | `eps_u`, `eps_m`; `rms_u`, `rms_m`, `gif_value`, `gif_is_lower_bound` | §4 Q2 | design.md §13 (all-40-step aggregates) | R-2 | Y |

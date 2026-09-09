@@ -1,4 +1,5 @@
 .venv/
+.venv-phase2/
 __pycache__/
 *.pyc
 .pytest_cache/
@@ -7,3 +8,9 @@ __pycache__/
 # live in results/minimal/ and figures/, which stay tracked
 results/repro/
 figures-repro/
+# Phase 2 pilot acquisition roots: measurement artefacts only, never part of a contracted result bundle
+results/phase2-pilot/
+results/phase2-pilot-fresh-20260908/
+figures-phase2-pilot*/
+# transient orchestration state (previously excluded only through the local, unshared .git/info/exclude)
+.herd/
